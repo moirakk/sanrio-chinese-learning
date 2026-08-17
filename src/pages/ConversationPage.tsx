@@ -69,6 +69,11 @@ export default function ConversationPage() {
       }, 1500);
     } else {
       setFillMsg('おしい！文脈を考えてみよう');
+      const btn = document.getElementById(`btn-${choice}`);
+      if (btn) {
+        btn.classList.add('shake-soft', 'border-red-400', 'bg-red-50', 'text-red-500');
+        setTimeout(() => btn.classList.remove('shake-soft', 'border-red-400', 'bg-red-50', 'text-red-500'), 500);
+      }
     }
   }
 
@@ -107,6 +112,11 @@ export default function ConversationPage() {
       }, 1500);
     } else {
       setOrderMsg('ちがうよ。主語→動詞→目的語を意識しよう');
+      const track = document.getElementById('sentence-track');
+      if (track) {
+        track.classList.add('shake-soft', 'border-red-400', 'bg-red-50');
+        setTimeout(() => track.classList.remove('shake-soft', 'border-red-400', 'bg-red-50'), 500);
+      }
       setTimeout(() => setPickedWords([]), 1000);
     }
   }
@@ -205,6 +215,7 @@ export default function ConversationPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {currentOptions.map((choice) => (
             <button
+              id={`btn-${choice}`}
               key={`${fill.q}-${choice}`}
               type="button"
               onClick={() => answerFill(choice)}
@@ -234,7 +245,7 @@ export default function ConversationPage() {
           <p className="text-sm font-bold text-slate-500 mb-3 text-center">{order.ja}</p>
           
           {/* Sentence Track */}
-          <div className="flex flex-wrap gap-2 justify-center min-h-[60px] p-2 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300">
+          <div id="sentence-track" className="flex flex-wrap gap-2 justify-center min-h-[60px] p-2 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 transition-colors duration-300">
             {Array.from({ length: order.words.length }).map((_, i) => {
               const word = pickedWords[i];
               return word ? (
