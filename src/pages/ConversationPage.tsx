@@ -46,6 +46,7 @@ export default function ConversationPage() {
   const [orderCompleted, setOrderCompleted] = useState(false);
 
   const fill = fillQuiz[fillIndex % fillQuiz.length];
+  const currentOptions = useMemo(() => shuffle([...fill.options]), [fillIndex]);
   const order = orderQuiz[orderIndex % orderQuiz.length];
 
   function answerFill(choice: string) {
@@ -202,7 +203,7 @@ export default function ConversationPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          {shuffle(fill.options).map((choice) => (
+          {currentOptions.map((choice) => (
             <button
               key={`${fill.q}-${choice}`}
               type="button"

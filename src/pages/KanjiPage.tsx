@@ -29,9 +29,10 @@ export default function KanjiPage() {
   
   const displayGroups = useMemo(
     () =>
-      profile === 'sister9'
+      (profile === 'sister9'
         ? kanjiGroups.map((g) => ({ ...g, items: g.items.filter((k) => k.strokes <= 8 || k.difficulty === 1) }))
-        : kanjiGroups,
+        : kanjiGroups
+      ).filter(g => g.items.length > 0),
     [profile],
   );
 
@@ -40,7 +41,13 @@ export default function KanjiPage() {
     body: '👋', food: '🍱', daily: '☀️', nature: '🌿', action: '🏃'
   };
 
-  const [selectedGroup, setSelectedGroup] = useState(displayGroups[0].key);
+  const [selectedGroup, setSelectedGroup] = useState(displayGroups[0]?.key);
+  
+  useEffect(() => {
+    if (!displayGroups.find(g => g.key === selectedGroup)) {
+      setSelectedGroup(displayGroups[0]?.key);
+    }
+  }, [displayGroups, selectedGroup]);
   
   // Game 3
   const [puzzleIndex, setPuzzleIndex] = useState(0);
@@ -61,6 +68,10 @@ export default function KanjiPage() {
 
   const leftParts = Array.from(new Set(puzzleBank.map((p) => p.left)));
   const rightParts = Array.from(new Set(puzzleBank.map((p) => p.right)));
+
+  useEffect(() => {
+    setHunt(makeHuntSet(validTargets));
+  }, [profile]);
 
   useEffect(() => {
     setShowHint(true);
@@ -215,7 +226,7 @@ export default function KanjiPage() {
                 <p className="text-xs font-bold text-blue-500 mb-2 text-center">左パーツ</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {leftParts.map(p => (
-                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, left: p }))} className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 font-black text-xl hover:bg-blue-200 btn-3d">{p}</button>
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, left: p }))} className="w-12 h-12 rounded-lg bg-blue-50 text-blue-700 font-black text-xl hover:bg-blue-200 btn-3d">{p}</button>
                   ))}
                 </div>
               </div>
@@ -223,7 +234,7 @@ export default function KanjiPage() {
                 <p className="text-xs font-bold text-blue-500 mb-2 text-center">右パーツ</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {rightParts.map(p => (
-                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, right: p }))} className="w-10 h-10 rounded-lg bg-blue-100 text-blue-800 font-black text-xl hover:bg-blue-300 btn-3d">{p}</button>
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, right: p }))} className="w-12 h-12 rounded-lg bg-blue-100 text-blue-800 font-black text-xl hover:bg-blue-300 btn-3d">{p}</button>
                   ))}
                 </div>
               </div>
