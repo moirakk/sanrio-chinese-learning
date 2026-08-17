@@ -73,11 +73,18 @@ function buildToneQuestions(kanji: KanjiItem[], total: number): Question[] {
 }
 
 function buildPuzzleQuestions(kanji: KanjiItem[], total: number): Question[] {
-  const source = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
   const out: Question[] = [];
-  for (let i = 0; i < total; i += 1) {
-    const t = source[i % source.length];
-    const wrong = takeRandom(source.filter((x) => x.hanzi !== t.hanzi), 3).map((x) => x.ja);
+  if (!kanji.length) return out;
+  const fillers = kanji.map((k) => k.ja);
+  for (let i = 0; i < total; i++) {
+    const t = kanji[i % kanji.length];
+    
+    // Attempt to match with similarKanji meaning if possible, else random
+    // But similarKanji are hanzi strings. We just provide 4 options of ja meanings.
+    let wrong = kanji.filter((k) => k.hanzi !== t.hanzi).map((k) => k.ja);
+    wrong = wrong.slice(0, 3);
+    while (wrong.length < 3) wrong.push(fillers[Math.floor(Math.random() * fillers.length)] || 'ダミー');
+    
     out.push({ kind: 'puzzle', prompt: `「${t.hanzi}」の意味は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja });
   }
   return out;
@@ -104,16 +111,30 @@ function buildHuntQuestions(kanji: KanjiItem[], total: number): Question[] {
 }
 
 function buildFillQuestions(conversation: ConversationItem[], total: number): Question[] {
-  const source = conversation.length > 0 ? conversation : [{ id: 'f', scene: '', zh: '我 不 懂。', ja: 'わかりません。', difficulty: 1, keywords: [] }];
-  const filler = ['谢谢。', '再见。', '请 帮 我。', '可以。', '好 吃！'];
   const out: Question[] = [];
-  for (let i = 0; i < total; i += 1) {
-    const line = source[i % source.length];
-    const wrong = takeRandom(
-      [...source.filter((x) => x.id !== line.id).map((x) => x.zh), ...filler].filter((x) => x !== line.zh),
-      3,
-    );
-    out.push({ kind: 'fill', prompt: line.ja, options: shuffle([line.zh, ...wrong]), answer: line.zh });
+  if (!conversation.length) return out;
+  
+  for (let i = 0; i < total; i++) {
+    const line = conversation[i % conversation.length];
+    
+    const parts = line.zh.split(' ');
+    if (parts.length < 2) {
+      out.push({ kind: 'fill', prompt: line.ja, options: shuffle([line.zh, '你好', '谢谢', '对不起']), answer: line.zh });
+      continue;
+    }
+    
+    const hideIndex = Math.floor(Math.random() * parts.length);
+    const hiddenWord = parts[hideIndex];
+    const promptText = parts.map((p, idx) => idx === hideIndex ? '（___）' : p).join(' ');
+    const displayPrompt = `${(line as any).speaker ? (line as any).speaker + ': ' : ''}${promptText}
+(${line.ja})`;
+
+    const allWords = conversation.flatMap(c => c.zh.split(' '));
+    let wrong = allWords.filter(w => w !== hiddenWord);
+    wrong = shuffle(Array.from(new Set(wrong))).slice(0, 3);
+    while (wrong.length < 3) wrong.push('的');
+
+    out.push({ kind: 'fill', prompt: displayPrompt, options: shuffle([hiddenWord, ...wrong]), answer: hiddenWord });
   }
   return out;
 }
@@ -193,7 +214,7 @@ export default function UnitPage() {
   const pinyin = scope.flatMap((u) => u.pinyin);
   const kanji = scope.flatMap((u) => u.kanji);
   const conversation = scope.flatMap((u) => u.conversation);
-  const totalQuestions = unit?.isTest ? 10 : 5;
+  const totalQuestions = unit?.id === 15 ? 15 : (unit?.isTest ? 10 : 5);
   const passRate = unit?.isTest ? 0.8 : 0.6;
 
   const baseGameKind = unit?.gameType === 'memory' ? 'memory' : unit?.gameType || 'fill';
@@ -339,7 +360,7 @@ export default function UnitPage() {
 
         <section className="space-y-6">
           <section className="rounded-3xl bg-pink-50 border-2 border-pink-200 p-4 md:p-6 card-shadow">
-            <h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-pink-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-pink-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-pink-200">一緒に発音してみよう！</div></div><h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {pinyin.map((item) => (
                 <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
@@ -350,7 +371,7 @@ export default function UnitPage() {
             </div>
           </section>
           <section className="rounded-3xl bg-blue-50 border-2 border-blue-200 p-4 md:p-6 card-shadow">
-            <h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-blue-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-blue-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-blue-200">新しい漢字を覚えよう！</div></div><h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {kanji.map((item) => (
                 <div key={`${item.hanzi}-${item.pinyin}`} className="rounded-2xl bg-white border-2 border-blue-200 p-4 text-center btn-3d">
@@ -361,7 +382,7 @@ export default function UnitPage() {
             </div>
           </section>
           <section className="rounded-3xl bg-yellow-50 border-2 border-yellow-200 p-4 md:p-6 card-shadow">
-            <h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-yellow-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-yellow-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-yellow-200">実際に使ってみよう！</div></div><h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
             <div className="space-y-3">
               {conversation.map((item, i) => (
                 <div key={item.id} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
@@ -499,7 +520,21 @@ export default function UnitPage() {
           <section className="rounded-3xl bg-yellow-50 border-4 border-yellow-300 p-6 text-center card-shadow confetti">
             <p className="text-2xl font-black text-yellow-600 mb-2">結果発表！</p>
             <p className="font-black text-slate-700 mb-2">{score} / {totalQuestions} 正解</p>
-            <p className="font-bold text-slate-600 mb-4">{resultPass ? 'クリア！すごい！' : 'もう一回チャレンジ！'}</p>
+            <div className="text-2xl font-black mb-4">
+  {score === totalQuestions ? <span className="text-pink-500">すごい！完璧！✨</span> : 
+   score >= totalQuestions * 0.8 ? <span className="text-orange-500">よくできた！もうちょっとで満点！</span> :
+   resultPass ? <span className="text-blue-500">クリア！よくがんばったね！</span> :
+   <span className="text-slate-500">がんばった！復習してもう一回チャレンジ！</span>}
+</div>
+{unit.kanji.length > 0 && (
+  <div className="my-6 p-4 bg-white rounded-2xl border-2 border-yellow-200">
+    <p className="font-bold text-slate-500 text-sm mb-2">学んだ漢字のおさらい</p>
+    <div className="flex flex-wrap justify-center gap-3">
+      {unit.kanji.map((k: any) => <span key={k.hanzi} className="text-3xl font-black text-slate-700">{k.hanzi}</span>)}
+    </div>
+  </div>
+)}
+
             {resultPass ? <p className="font-bold text-pink-600 mb-4">⭐ クリア報酬獲得（再挑戦時は半分）</p> : null}
             <div className="flex flex-wrap justify-center gap-3">
               <button onClick={resetGame} className="rounded-full px-6 py-3 bg-purple-500 text-white font-black btn-3d">もう一回チャレンジ！</button>
