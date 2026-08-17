@@ -37,7 +37,7 @@ export default function KanjiPage() {
   );
 
   const icons: Record<string, string> = {
-    numbers: '🔢', colors: '🎨', animals: '🐾', family: '👨‍👩‍👧', 
+    numbers: '🔢', colors: '🎨', animals: '🐾', family: '家',
     body: '👋', food: '🍱', daily: '☀️', nature: '🌿', action: '🏃'
   };
 

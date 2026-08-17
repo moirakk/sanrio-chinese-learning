@@ -3,6 +3,7 @@ import { useProfile } from '../hooks/useProfile';
 import {
   KittyGuide,
   MelodyGuide,
+  KuromiGuide,
   PochaccoGuide
 } from '../assets/characters/characters';
 
@@ -44,9 +45,9 @@ export default function Layout({
           >
             <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden border border-pink-300 group-hover:scale-110 transition-transform pop-in">
               {profile === 'sister9' ? (
-                <div className="text-xl">👧</div>
+                <MelodyGuide className="w-9 h-9" />
               ) : (
-                <div className="text-xl">👩</div>
+                <KuromiGuide className="w-9 h-9" />
               )}
             </div>
             <div className="hidden sm:block text-left">
