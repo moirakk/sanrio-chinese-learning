@@ -83,6 +83,11 @@ export default function Home() {
           );
         })}
       </div>
+      <div className="mt-8 text-center">
+        <Link to="/together" className="inline-flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 text-white px-8 py-4 rounded-full font-black text-xl btn-3d shadow-lg hover:scale-105 transition-transform">
+          ✨ ふたりでチャレンジ！ ✨
+        </Link>
+      </div>
     </Layout>
   );
 }

@@ -147,7 +147,33 @@ export default function MyRoomPage() {
         </section>
       </div>
 
-      {/* Character Collection */}
+      {/* Save/Load Area */}
+        <section className="rounded-3xl bg-orange-50 border-2 border-orange-200 p-6 card-shadow">
+          <h3 className="text-xl font-black text-orange-600 mb-4">セーブ / ロード</h3>
+          <div className="flex gap-4">
+            <button className="flex-1 bg-white border-2 border-orange-300 rounded-2xl py-3 font-bold text-orange-500 btn-3d">
+              💾 セーブする
+            </button>
+            <button className="flex-1 bg-white border-2 border-orange-300 rounded-2xl py-3 font-bold text-orange-500 btn-3d">
+              📂 ロードする
+            </button>
+          </div>
+        </section>
+
+        {/* Stickers Area */}
+        <section className="rounded-3xl bg-rose-50 border-2 border-rose-200 p-6 card-shadow">
+          <h3 className="text-xl font-black text-rose-600 mb-4">おてがみ</h3>
+          <div className="flex gap-4">
+            <button className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d">
+              💌 おてがみをおくる
+            </button>
+            <button className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d">
+              📫 ポストをみる
+            </button>
+          </div>
+        </section>
+
+        {/* Character Collection */}
       <section className="bg-indigo-50 rounded-3xl p-6 card-shadow border-4 border-indigo-200">
         <h3 className="mb-6 text-xl font-black text-indigo-600 flex items-center gap-2">
           <span>🎁</span> キャラクターコレクション
