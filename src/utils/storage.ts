@@ -5,6 +5,7 @@ type ProgressState = {
   hearts: number;
   badges: string[];
   clearedGames: string[];
+  clearedUnits: number[];
   learnedKanji: string[];
   learnedPhrases: string[];
   unlockedCharacters: string[];
@@ -15,6 +16,7 @@ const defaultState: ProgressState = {
   hearts: 0,
   badges: [],
   clearedGames: [],
+  clearedUnits: [],
   learnedKanji: [],
   learnedPhrases: [],
   unlockedCharacters: ['Kitty風'],
@@ -59,4 +61,19 @@ export function updateLearned(profile: Profile, kanji: string[], phrases: string
   const learnedKanji = Array.from(new Set([...now.learnedKanji, ...kanji]));
   const learnedPhrases = Array.from(new Set([...now.learnedPhrases, ...phrases]));
   saveProgress(profile, { ...now, learnedKanji, learnedPhrases });
+}
+
+export function isUnitUnlocked(profile: Profile, unitId: number) {
+  if (unitId <= 1) return true;
+  const now = getProgress(profile);
+  return now.clearedUnits.includes(unitId - 1);
+}
+
+export function clearUnit(profile: Profile, unitId: number, starsEarned: number, heartsEarned = 0) {
+  const now = getProgress(profile);
+  const alreadyCleared = now.clearedUnits.includes(unitId);
+  const clearedUnits = alreadyCleared ? now.clearedUnits : [...now.clearedUnits, unitId];
+  const stars = now.stars + (alreadyCleared ? Math.max(1, Math.floor(starsEarned / 3)) : starsEarned);
+  const hearts = now.hearts + heartsEarned;
+  saveProgress(profile, { ...now, clearedUnits, stars, hearts });
 }

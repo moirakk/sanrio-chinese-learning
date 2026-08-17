@@ -3,18 +3,12 @@ import { useProfile } from '../hooks/useProfile';
 import {
   KittyGuide,
   MelodyGuide,
-  CinnamorollGuide,
-  PompompurinGuide,
-  KuromiGuide,
   PochaccoGuide
 } from '../assets/characters/characters';
 
 const nav = [
   { to: '/', label: 'ホーム', Icon: KittyGuide, color: 'text-pink-500' },
-  { to: '/pinyin', label: 'ピンイン', Icon: MelodyGuide, color: 'text-purple-500' },
-  { to: '/kanji', label: '漢字', Icon: CinnamorollGuide, color: 'text-blue-500' },
-  { to: '/conversation', label: '会話', Icon: PompompurinGuide, color: 'text-yellow-600' },
-  { to: '/challenge', label: '塔', Icon: KuromiGuide, color: 'text-slate-800' },
+  { to: '/unit/1', label: 'ユニット', Icon: MelodyGuide, color: 'text-purple-500' },
   { to: '/myroom', label: 'マイルーム', Icon: PochaccoGuide, color: 'text-emerald-600' },
 ];
 
@@ -74,7 +68,7 @@ export default function Layout({
       <nav className="fixed bottom-0 left-0 right-0 z-50 glass-panel border-t border-white/50 pb-safe shadow-[0_-10px_40px_rgba(255,183,197,0.3)] md:bottom-6 md:left-1/2 md:right-auto md:w-[90%] md:max-w-4xl md:-translate-x-1/2 md:rounded-2xl md:border">
         <div className="flex justify-around items-center px-2 py-2 md:px-6">
           {nav.map((item) => {
-            const active = location.pathname === item.to;
+            const active = item.to === '/unit/1' ? location.pathname.startsWith('/unit/') : location.pathname === item.to;
             const Icon = item.Icon;
             return (
               <Link

@@ -35,7 +35,7 @@ export default function MyRoomPage() {
 
   const starPct = Math.min(100, Math.round((progress.stars / starGoal) * 100));
   const heartPct = Math.min(100, Math.round((progress.hearts / heartGoal) * 100));
-  const badgePct = Math.min(100, Math.round(((progress.clearedGames.length) / badgeGoal) * 100));
+  const badgePct = Math.min(100, Math.round(((progress.clearedUnits.length) / badgeGoal) * 100));
 
   return (
     <Layout title="マイルーム" subtitle="Pochaccoと成長記録をチェック">
@@ -95,7 +95,7 @@ export default function MyRoomPage() {
             </div>
             <div className="flex justify-between items-center text-sm font-bold bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
               <span className="text-amber-500">🏅 ゲームクリア</span>
-              <span className="text-slate-700">{progress.clearedGames.length}回</span>
+              <span className="text-slate-700">{progress.clearedUnits.length}ユニット</span>
             </div>
           </div>
         </section>
