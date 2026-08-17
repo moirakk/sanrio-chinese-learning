@@ -1,4 +1,6 @@
-import Layout from '../components/Layout';
+import fs from 'fs';
+
+const content = `import Layout from '../components/Layout';
 import { KittyGuide, MelodyGuide, CinnamorollGuide, PompompurinGuide, KuromiGuide, PochaccoGuide } from '../assets/characters/characters';
 import { useProfile } from '../hooks/useProfile';
 import { getProgress } from '../utils/storage';
@@ -49,7 +51,7 @@ export default function MyRoomPage() {
   const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
 
   const handleSave = () => {
-    const data = localStorage.getItem(`sanrio_progress_${profile}`);
+    const data = localStorage.getItem(\`sanrio_progress_\${profile}\`);
     if (!data) return;
     const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -57,7 +59,7 @@ export default function MyRoomPage() {
     a.href = url;
     const date = new Date().toISOString().slice(0,10).replace(/-/g, '');
     const name = profile === 'sister9' ? 'may' : 'yuna';
-    a.download = `${name}_progress_${date}.json`;
+    a.download = \`\${name}_progress_\${date}.json\`;
     a.click();
     URL.revokeObjectURL(url);
     
@@ -75,7 +77,7 @@ export default function MyRoomPage() {
         const json = JSON.parse(event.target?.result as string);
         if (json && Array.isArray(json.clearedUnits) && typeof json.stars === 'number') {
           if (window.confirm('今のデータを上書きするよ。いい？')) {
-            localStorage.setItem(`sanrio_progress_${profile}`, JSON.stringify(json));
+            localStorage.setItem(\`sanrio_progress_\${profile}\`, JSON.stringify(json));
             window.location.reload();
           }
         } else {
@@ -98,7 +100,7 @@ export default function MyRoomPage() {
   const [sentFeedback, setSentFeedback] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem(`sanrio_stickers_${profile}`);
+    const data = localStorage.getItem(\`sanrio_stickers_\${profile}\`);
     if (data) {
       setStickers(JSON.parse(data));
     }
@@ -109,7 +111,7 @@ export default function MyRoomPage() {
   const handleSendSticker = () => {
     if (selectedSticker === null) return;
     const targetProfile = profile === 'sister9' ? 'sister12' : 'sister9';
-    const existingStr = localStorage.getItem(`sanrio_stickers_${targetProfile}`);
+    const existingStr = localStorage.getItem(\`sanrio_stickers_\${targetProfile}\`);
     const existing = existingStr ? JSON.parse(existingStr) : [];
     
     const newSticker = {
@@ -121,7 +123,7 @@ export default function MyRoomPage() {
       read: false
     };
     
-    localStorage.setItem(`sanrio_stickers_${targetProfile}`, JSON.stringify([newSticker, ...existing].slice(0, 10)));
+    localStorage.setItem(\`sanrio_stickers_\${targetProfile}\`, JSON.stringify([newSticker, ...existing].slice(0, 10)));
     
     setComposing(false);
     setSelectedSticker(null);
@@ -135,7 +137,7 @@ export default function MyRoomPage() {
     if (unreadCount > 0) {
       const updated = stickers.map(s => ({...s, read: true}));
       setStickers(updated);
-      localStorage.setItem(`sanrio_stickers_${profile}`, JSON.stringify(updated));
+      localStorage.setItem(\`sanrio_stickers_\${profile}\`, JSON.stringify(updated));
     }
   };
 
@@ -165,13 +167,13 @@ export default function MyRoomPage() {
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
               <circle cx="50" cy="50" r="28" fill="none" stroke="#f1f5f9" strokeWidth="6" />
               <circle cx="50" cy="50" r="28" fill="none" stroke="#f59e0b" strokeWidth="6" strokeLinecap="round" 
-                strokeDasharray={`${(badgePct / 100) * (2 * Math.PI * 28)} 1000`} className="transition-all duration-1000 delay-500" />
+                strokeDasharray={\`\${(badgePct / 100) * (2 * Math.PI * 28)} 1000\`} className="transition-all duration-1000 delay-500" />
               <circle cx="50" cy="50" r="38" fill="none" stroke="#f1f5f9" strokeWidth="8" />
               <circle cx="50" cy="50" r="38" fill="none" stroke="#f43f5e" strokeWidth="8" strokeLinecap="round" 
-                strokeDasharray={`${(heartPct / 100) * (2 * Math.PI * 38)} 1000`} className="transition-all duration-1000 delay-300" />
+                strokeDasharray={\`\${(heartPct / 100) * (2 * Math.PI * 38)} 1000\`} className="transition-all duration-1000 delay-300" />
               <circle cx="50" cy="50" r="48" fill="none" stroke="#f1f5f9" strokeWidth="10" />
               <circle cx="50" cy="50" r="48" fill="none" stroke="#eab308" strokeWidth="10" strokeLinecap="round" 
-                strokeDasharray={`${(starPct / 100) * (2 * Math.PI * 48)} 1000`} className="transition-all duration-1000" />
+                strokeDasharray={\`\${(starPct / 100) * (2 * Math.PI * 48)} 1000\`} className="transition-all duration-1000" />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-black text-slate-700">{starPct}%</span>
@@ -283,7 +285,7 @@ export default function MyRoomPage() {
                 <button 
                   key={s.id} 
                   onClick={() => setSelectedSticker(i)}
-                  className={`flex flex-col items-center p-2 rounded-xl border-2 transition-all ${selectedSticker === i ? 'border-rose-400 bg-rose-50 scale-105' : 'border-slate-100 hover:border-rose-200'}`}
+                  className={\`flex flex-col items-center p-2 rounded-xl border-2 transition-all \${selectedSticker === i ? 'border-rose-400 bg-rose-50 scale-105' : 'border-slate-100 hover:border-rose-200'}\`}
                 >
                   <Guide className="w-12 h-12 mb-1 drop-shadow-sm" />
                   <span className="text-2xl">{s.emoji}</span>
@@ -349,11 +351,11 @@ export default function MyRoomPage() {
             const Guide = char.Guide;
             
             return (
-              <div key={char.name} className={`relative flex flex-col items-center bg-white rounded-2xl p-4 border-4 transition-all duration-500 ${unlocked ? 'border-indigo-300 hover:-translate-y-2 card-shadow group' : 'border-slate-200 opacity-80'}`}>
-                <div className={`w-20 h-20 mb-3 transition-transform duration-500 ${unlocked ? 'group-hover:scale-110 drop-shadow-md' : '[filter:grayscale(1)_blur(2px)_opacity(0.5)]'}`}>
+              <div key={char.name} className={\`relative flex flex-col items-center bg-white rounded-2xl p-4 border-4 transition-all duration-500 \${unlocked ? 'border-indigo-300 hover:-translate-y-2 card-shadow group' : 'border-slate-200 opacity-80'}\`}>
+                <div className={\`w-20 h-20 mb-3 transition-transform duration-500 \${unlocked ? 'group-hover:scale-110 drop-shadow-md' : '[filter:grayscale(1)_blur(2px)_opacity(0.5)]'}\`}>
                   <Guide className="w-full h-full" />
                 </div>
-                <span className={`font-black text-sm text-center ${unlocked ? 'text-indigo-600' : 'text-slate-400'}`}>
+                <span className={\`font-black text-sm text-center \${unlocked ? 'text-indigo-600' : 'text-slate-400'}\`}>
                   {char.name}
                 </span>
                 {!unlocked && (
@@ -373,3 +375,6 @@ export default function MyRoomPage() {
     </Layout>
   );
 }
+`
+
+fs.writeFileSync('src/pages/MyRoomPage.tsx', content);
