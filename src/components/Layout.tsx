@@ -35,7 +35,7 @@ export default function Layout({
   };
 
   return (
-    <div className="min-h-screen pb-24 md:p-5 lg:p-8 page-transition">
+    <div className="min-h-screen pb-20 md:p-5 lg:p-8 page-transition">
       <div className="mx-auto max-w-6xl rounded-3xl glass-panel p-4 md:p-6 card-shadow mb-8 relative">
         <header className="mb-6 flex items-center justify-between">
           <div>
@@ -88,7 +88,7 @@ export default function Layout({
                 {active && (
                   <div className="absolute inset-0 bg-pink-100/80 rounded-2xl -z-10 pulse-glow" />
                 )}
-                <div className={`w-8 h-8 md:w-12 md:h-12 flex items-center justify-center transition-transform ${active ? 'animate-bob' : ''}`}>
+                <div className={`w-6 h-6 md:w-12 md:h-12 flex items-center justify-center transition-transform ${active ? 'animate-bob' : ''}`}>
                   <Icon className="w-full h-full drop-shadow-md" />
                 </div>
                 <span className={`text-[10px] md:text-xs font-extrabold mt-1 tracking-wider ${active ? item.color + ' text-3d' : 'text-slate-500'}`}>

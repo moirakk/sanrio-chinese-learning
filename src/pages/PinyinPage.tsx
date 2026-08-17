@@ -214,7 +214,7 @@ export default function PinyinPage() {
                   </div>
                   {/* Back (Revealed) */}
                   <div className={`absolute inset-0 backface-hidden [transform:rotateY(180deg)] rounded-2xl border-4 flex items-center justify-center text-xl md:text-2xl font-black ${
-                    card.solved ? 'bg-yellow-100 border-yellow-400 text-yellow-600 shadow-[0_0_15px_rgba(250,204,21,0.5)]' : 'bg-white border-pink-300 text-pink-600'
+                    card.solved ? 'bg-yellow-100 border-yellow-400 text-yellow-600 shadow-[0_0_15px_rgba(250,204,21,0.5)] ring-2 ring-yellow-400 pop-in' : 'bg-white border-pink-300 text-pink-600'
                   }`}>
                     {card.value}
                     {card.solved && <div className="absolute -top-2 -right-2 text-xl sparkle"></div>}

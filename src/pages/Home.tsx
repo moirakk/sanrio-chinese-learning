@@ -96,6 +96,8 @@ export default function Home() {
             desc="My Melodyと発音の練習" 
             guide={<MelodyGuide className="w-full h-full" />} 
             waveColor="fill-pink-200"
+            done={progress.clearedGames.filter(g => g.startsWith('pinyin')).length}
+            total={2}
             progress={Math.min(100, Math.round((progress.clearedGames.filter(g => g.startsWith('pinyin')).length / 2) * 100) || 0)}
           />
           <ModuleCard 
@@ -107,6 +109,8 @@ export default function Home() {
             desc="Cinnamorollと漢字を学ぶ" 
             guide={<CinnamorollGuide className="w-full h-full" />} 
             waveColor="fill-blue-200"
+            done={progress.clearedGames.filter(g => g.startsWith('kanji')).length}
+            total={2}
             progress={Math.min(100, Math.round((progress.clearedGames.filter(g => g.startsWith('kanji')).length / 2) * 100) || 0)}
           />
           <ModuleCard 
@@ -118,6 +122,8 @@ export default function Home() {
             desc="Pompompurinと会話する" 
             guide={<PompompurinGuide className="w-full h-full" />} 
             waveColor="fill-yellow-200"
+            done={progress.clearedGames.filter(g => g.startsWith('conv')).length}
+            total={2}
             progress={Math.min(100, Math.round((progress.clearedGames.filter(g => g.startsWith('conv')).length / 2) * 100) || 0)}
           />
           <ModuleCard 
@@ -129,6 +135,8 @@ export default function Home() {
             desc="Kuromiの総合テスト" 
             guide={<KuromiGuide className="w-full h-full" />} 
             waveColor="fill-purple-200"
+            done={progress.clearedGames.filter(g => g.startsWith('tower')).length}
+            total={10}
             progress={Math.min(100, Math.round((progress.clearedGames.filter(g => g.startsWith('tower')).length / 10) * 100) || 0)}
           />
           <ModuleCard 
@@ -140,6 +148,8 @@ export default function Home() {
             desc="Pochaccoと成長を確認" 
             guide={<PochaccoGuide className="w-full h-full" />} 
             waveColor="fill-emerald-200"
+            done={progress.unlockedCharacters.length}
+            total={6}
             progress={progress.unlockedCharacters.length > 0 ? 100 : 50}
           />
         </div>
@@ -157,6 +167,8 @@ function ModuleCard({
   desc,
   guide,
   waveColor,
+  done,
+  total,
   progress,
 }: {
   to: string;
@@ -167,15 +179,17 @@ function ModuleCard({
   desc: string;
   guide: ReactElement;
   waveColor: string;
+  done: number;
+  total: number;
   progress: number;
 }) {
   return (
     <Link 
       to={to} 
-      className={`group relative overflow-hidden flex flex-row items-center rounded-3xl ${colorClass} border-2 ${borderColor} p-4 md:p-5 card-shadow transition-transform duration-300`} 
+      className={`group relative overflow-hidden flex flex-row items-center rounded-3xl ${colorClass} border-2 ${borderColor} p-4 md:p-5 card-shadow transition-transform duration-300 active:scale-[0.98]`} 
       aria-label={`${title}へ`}
     >
-      <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 z-10 transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110 drop-shadow-md">
+      <div className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 z-10 transition-transform duration-300 group-hover:-translate-y-2 group-hover:scale-110 drop-shadow-md animate-bob">
         {guide}
       </div>
       
@@ -183,6 +197,10 @@ function ModuleCard({
         <h3 className={`text-lg md:text-xl font-black ${textColor} mb-1 drop-shadow-sm`}>{title}</h3>
         <p className="text-xs md:text-sm font-bold text-slate-600 mb-3">{desc}</p>
         
+        <div className="mb-1 flex items-center justify-between text-[11px] font-black text-slate-500">
+          <span>進捗</span>
+          <span>{done}/{total} ゲーム</span>
+        </div>
         <div className="w-full h-2.5 bg-white/60 rounded-full overflow-hidden shadow-inner border border-white/50">
           <div className={`h-full rounded-full ${borderColor.replace('border-', 'bg-')} progress-3d transition-all duration-700 ease-out`} style={{ width: `${progress}%` }} />
         </div>

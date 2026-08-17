@@ -214,9 +214,9 @@ export default function KanjiPage() {
               <button 
                 onClick={checkPuzzle}
                 disabled={!puzzleSelect.left || !puzzleSelect.right}
-                className="ml-4 w-16 h-16 rounded-full bg-yellow-400 text-white font-black text-xl btn-3d disabled:opacity-50 disabled:btn-3d flex items-center justify-center"
+                className="ml-4 w-16 h-16 rounded-full bg-yellow-400 text-white font-black text-xl btn-3d disabled:opacity-50 flex items-center justify-center"
               >
-                GO
+                できた
               </button>
             </div>
 
@@ -226,7 +226,7 @@ export default function KanjiPage() {
                 <p className="text-xs font-bold text-blue-500 mb-2 text-center">左パーツ</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {leftParts.map(p => (
-                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, left: p }))} className="w-12 h-12 rounded-lg bg-blue-50 text-blue-700 font-black text-xl hover:bg-blue-200 btn-3d">{p}</button>
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, left: p }))} className={`w-12 h-12 rounded-lg text-blue-700 font-black text-xl hover:bg-blue-200 btn-3d ${puzzleSelect.left === p ? 'ring-2 ring-sky-400 bg-sky-50' : 'bg-blue-50'}`}>{p}</button>
                   ))}
                 </div>
               </div>
@@ -234,7 +234,7 @@ export default function KanjiPage() {
                 <p className="text-xs font-bold text-blue-500 mb-2 text-center">右パーツ</p>
                 <div className="flex flex-wrap gap-2 justify-center">
                   {rightParts.map(p => (
-                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, right: p }))} className="w-12 h-12 rounded-lg bg-blue-100 text-blue-800 font-black text-xl hover:bg-blue-300 btn-3d">{p}</button>
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, right: p }))} className={`w-12 h-12 rounded-lg text-blue-800 font-black text-xl hover:bg-blue-300 btn-3d ${puzzleSelect.right === p ? 'ring-2 ring-sky-400 bg-sky-50' : 'bg-blue-100'}`}>{p}</button>
                   ))}
                 </div>
               </div>

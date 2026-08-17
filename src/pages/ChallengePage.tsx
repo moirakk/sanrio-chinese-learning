@@ -230,13 +230,13 @@ export default function ChallengePage() {
                 const isMe = item.id === profile;
                 
                 return (
-                  <div key={item.name} className={`relative p-4 rounded-2xl border-2 transition-all ${isMe ? 'bg-pink-50 border-pink-300 shadow-sm' : 'bg-slate-50 border-slate-200'}`}>
+                  <div key={item.name} className={`relative p-4 rounded-2xl border-2 transition-all card-shadow ${isMe ? 'bg-pink-50 border-pink-300 shadow-sm' : 'bg-slate-50 border-slate-200'}`}>
                     <div className="flex items-center justify-between mb-2 relative z-10">
                       <div className="flex items-center gap-2">
                         <span className="text-2xl drop-shadow-sm">{medal}</span>
-                        <span className={`font-black ${isMe ? 'text-pink-600' : 'text-slate-600'}`}>{item.name} {isMe && <span className="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full ml-1">YOU</span>}</span>
+                        <span className={`text-lg font-black ${isMe ? 'text-pink-600' : 'text-slate-600'}`}>{item.name} {isMe && <span className="text-xs bg-pink-500 text-white px-2 py-0.5 rounded-full ml-1">YOU</span>}</span>
                       </div>
-                      <span className="font-black text-yellow-600 text-lg drop-shadow-sm">⭐ {item.stars}</span>
+                      <span className="font-black text-yellow-600 text-xl drop-shadow-sm">⭐ {item.stars}</span>
                     </div>
                     {/* Bar chart background */}
                     <div className="w-full h-3 bg-slate-200 rounded-full overflow-hidden shadow-inner relative z-10">

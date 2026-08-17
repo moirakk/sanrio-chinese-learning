@@ -252,7 +252,7 @@ export default function ConversationPage() {
                 <button 
                   key={`picked-${i}`} 
                   onClick={() => removeWord(i)}
-                  className="bg-orange-400 text-white font-black text-xl px-4 py-2 rounded-xl btn-3d pop-in"
+                  className="rounded-xl bg-orange-200 text-orange-700 border-2 border-orange-300 font-black text-xl px-3 py-1 btn-3d pop-in"
                 >
                   {word}
                 </button>
@@ -271,7 +271,7 @@ export default function ConversationPage() {
                 key={`pool-${word}-${idx}`}
                 type="button"
                 onClick={() => addWord(word)}
-                className="rounded-xl bg-white border-b-4 border-orange-200 px-6 py-3 text-xl font-black text-orange-600 hover:bg-orange-100 hover:-translate-y-1 active:translate-y-1 active:border-b-0 transition-all"
+                className="rounded-xl bg-white border-2 border-dashed border-orange-300 px-6 py-3 text-xl font-black text-orange-600 hover:bg-orange-100 hover:-translate-y-1 transition-all btn-3d"
               >
                 {word}
               </button>

@@ -159,14 +159,14 @@ export default function MyRoomPage() {
             const Guide = char.Guide;
             
             return (
-              <div key={char.name} className={`relative flex flex-col items-center bg-white rounded-2xl p-4 border-4 transition-all duration-500 ${unlocked ? 'border-indigo-300 hover:-translate-y-2 card-shadow group' : 'border-slate-200 grayscale opacity-60'}`}>
+              <div key={char.name} className={`relative flex flex-col items-center bg-white rounded-2xl p-4 border-4 transition-all duration-500 ${unlocked ? 'border-indigo-300 hover:-translate-y-2 card-shadow group' : 'border-slate-200 opacity-80'}`}>
                 
-                <div className={`w-20 h-20 mb-3 transition-transform duration-500 ${unlocked ? 'group-hover:scale-110 drop-shadow-md' : 'blur-[2px]'}`}>
+                <div className={`w-20 h-20 mb-3 transition-transform duration-500 ${unlocked ? 'group-hover:scale-110 drop-shadow-md' : '[filter:grayscale(1)_blur(2px)_opacity(0.5)]'}`}>
                   <Guide className="w-full h-full" />
                 </div>
                 
                 <span className={`font-black text-sm text-center ${unlocked ? 'text-indigo-600' : 'text-slate-400'}`}>
-                  {unlocked ? char.name : '???'}
+                  {char.name}
                 </span>
                 
                 {!unlocked && (
