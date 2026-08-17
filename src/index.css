@@ -1,14 +1,17 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  body {
-    @apply bg-sanrio-yellow text-slate-800;
-    /* Soft polka dot background */
-    background-image: radial-gradient(#FFB7C5 2px, transparent 2px);
-    background-size: 30px 30px;
-  }
+@theme {
+  --color-sanrio-pink: #FFB7C5;
+  --color-sanrio-blue: #87CEEB;
+  --color-sanrio-yellow: #FFF5E1;
+  --font-sans: "Noto Sans JP", "Noto Sans SC", sans-serif;
+}
+
+body {
+  background-color: var(--color-sanrio-yellow);
+  color: var(--color-slate-800);
+  background-image: radial-gradient(#FFB7C5 2px, transparent 2px);
+  background-size: 30px 30px;
 }
 
 .card-shadow {
