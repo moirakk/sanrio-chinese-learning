@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-sanrio-yellow text-slate-800;
+    /* Soft polka dot background */
+    background-image: radial-gradient(#FFB7C5 2px, transparent 2px);
+    background-size: 30px 30px;
+  }
+}
+
+.card-shadow {
+  box-shadow: 0 10px 25px -5px rgba(255, 183, 197, 0.5), 0 8px 10px -6px rgba(255, 183, 197, 0.3);
+}
