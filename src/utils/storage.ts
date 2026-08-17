@@ -73,7 +73,7 @@ export function clearUnit(profile: Profile, unitId: number, starsEarned: number,
   const now = getProgress(profile);
   const alreadyCleared = now.clearedUnits.includes(unitId);
   const clearedUnits = alreadyCleared ? now.clearedUnits : [...now.clearedUnits, unitId];
-  const stars = now.stars + (alreadyCleared ? Math.max(1, Math.floor(starsEarned / 3)) : starsEarned);
+  const stars = now.stars + (alreadyCleared ? Math.max(1, Math.floor(starsEarned / 2)) : starsEarned);
   const hearts = now.hearts + heartsEarned;
   saveProgress(profile, { ...now, clearedUnits, stars, hearts });
 }

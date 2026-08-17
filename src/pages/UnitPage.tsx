@@ -1,17 +1,45 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { getUnit } from '../data/units';
+import { getUnit, units } from '../data/units';
 import { clearUnit, isUnitUnlocked, updateLearned } from '../utils/storage';
 import { useProfile } from '../hooks/useProfile';
 import type { ConversationItem, KanjiItem, PinyinItem } from '../types';
-import { CinnamorollGuide, KittyGuide, KuromiGuide, MelodyGuide, PochaccoGuide, PompompurinGuide } from '../assets/characters/characters';
+import {
+  CinnamorollGuide,
+  KittyGuide,
+  KuromiGuide,
+  MelodyGuide,
+  PochaccoGuide,
+  PompompurinGuide,
+} from '../assets/characters/characters';
+
+type QuestionKind = 'tone' | 'puzzle' | 'hunt' | 'fill' | 'order' | 'match';
+type Question = { kind: QuestionKind; prompt: string; options: string[]; answer: string };
+type MemoryCard = { key: string; text: string; pair: string };
 
 function shuffle<T>(items: T[]): T[] {
   return [...items].sort(() => Math.random() - 0.5);
 }
 
-function Guide({ keyName }: { keyName: string }) {
+function takeRandom<T>(items: T[], n: number): T[] {
+  return shuffle(items).slice(0, Math.min(items.length, n));
+}
+
+function normalizePinyin(py: string): string {
+  return py.replace(/[1-5]/g, '');
+}
+
+function toneOf(py: string): '1' | '2' | '3' | '4' {
+  const m = py.match(/[1-5]/);
+  if (!m) return '1';
+  if (m[0] === '1') return '1';
+  if (m[0] === '2') return '2';
+  if (m[0] === '3') return '3';
+  return '4';
+}
+
+function guideByKey(keyName: string) {
   if (keyName === 'kitty') return <KittyGuide className="w-20 h-20 animate-bob" />;
   if (keyName === 'melody') return <MelodyGuide className="w-20 h-20 animate-bob" />;
   if (keyName === 'cinnamoroll') return <CinnamorollGuide className="w-20 h-20 animate-bob" />;
@@ -20,56 +48,121 @@ function Guide({ keyName }: { keyName: string }) {
   return <PochaccoGuide className="w-20 h-20 animate-bob" />;
 }
 
-function PinyinCorner({ pinyin }: { pinyin: PinyinItem[] }) {
-  return (
-    <section className="rounded-3xl bg-pink-50 border-2 border-pink-200 p-4 md:p-6 card-shadow">
-      <h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {pinyin.map((item) => (
-          <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
-            <p className="text-3xl font-black text-pink-600">{item.value}</p>
-            <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
-            <p className="text-xs font-bold text-slate-400 mt-1">{item.tipJa}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
+function buildScope(unitId: number) {
+  if (unitId === 5) return units.filter((u) => u.id >= 1 && u.id <= 4);
+  if (unitId === 10) return units.filter((u) => u.id >= 6 && u.id <= 9);
+  if (unitId === 15) return units.filter((u) => u.id >= 1 && u.id <= 14);
+  const one = units.find((u) => u.id === unitId);
+  return one ? [one] : [];
 }
 
-function KanjiCorner({ kanji }: { kanji: KanjiItem[] }) {
-  return (
-    <section className="rounded-3xl bg-blue-50 border-2 border-blue-200 p-4 md:p-6 card-shadow">
-      <h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {kanji.map((item) => (
-          <div key={`${item.hanzi}-${item.pinyin}`} className="rounded-2xl bg-white border-2 border-blue-200 p-4 text-center btn-3d">
-            <p className="text-4xl font-black text-slate-700">{item.hanzi}</p>
-            <p className="text-sm font-bold text-blue-600 mt-2">{item.pinyin}</p>
-            <p className="text-xs font-bold text-slate-500">{item.ja}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
+function buildToneQuestions(kanji: KanjiItem[], total: number): Question[] {
+  const source = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
+  const out: Question[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const k = source[i % source.length];
+    const ans = toneOf(k.pinyin);
+    out.push({
+      kind: 'tone',
+      prompt: `${k.hanzi}（${normalizePinyin(k.pinyin)}）は何声？`,
+      options: ['1', '2', '3', '4'],
+      answer: ans,
+    });
+  }
+  return shuffle(out);
 }
 
-function ConversationCorner({ conversation }: { conversation: ConversationItem[] }) {
-  return (
-    <section className="rounded-3xl bg-yellow-50 border-2 border-yellow-200 p-4 md:p-6 card-shadow">
-      <h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
-      <div className="space-y-3">
-        {conversation.map((item, i) => (
-          <div key={item.id} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
-            <div className={`chat-bubble ${i % 2 === 0 ? 'left border border-yellow-200' : 'right border border-pink-200'} max-w-[90%]`}>
-              <p className="text-xl font-black text-slate-700">{item.zh}</p>
-              <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
+function buildPuzzleQuestions(kanji: KanjiItem[], total: number): Question[] {
+  const source = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
+  const out: Question[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const t = source[i % source.length];
+    const wrong = takeRandom(source.filter((x) => x.hanzi !== t.hanzi), 3).map((x) => x.ja);
+    out.push({ kind: 'puzzle', prompt: `「${t.hanzi}」の意味は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja });
+  }
+  return out;
+}
+
+function buildHuntQuestions(kanji: KanjiItem[], total: number): Question[] {
+  const fillers = units.flatMap((u) => u.kanji);
+  const source = kanji.length > 0 ? kanji : fillers.slice(0, 5);
+  const out: Question[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const t = source[i % source.length];
+    const wrong = takeRandom(
+      [...source.filter((x) => x.hanzi !== t.hanzi), ...fillers.filter((x) => x.hanzi !== t.hanzi)],
+      11,
+    ).map((x) => x.hanzi);
+    out.push({
+      kind: 'hunt',
+      prompt: `${t.ja} / ${normalizePinyin(t.pinyin)} を探して！`,
+      options: shuffle([t.hanzi, ...wrong]).slice(0, 12),
+      answer: t.hanzi,
+    });
+  }
+  return out;
+}
+
+function buildFillQuestions(conversation: ConversationItem[], total: number): Question[] {
+  const source = conversation.length > 0 ? conversation : [{ id: 'f', scene: '', zh: '我 不 懂。', ja: 'わかりません。', difficulty: 1, keywords: [] }];
+  const filler = ['谢谢。', '再见。', '请 帮 我。', '可以。', '好 吃！'];
+  const out: Question[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const line = source[i % source.length];
+    const wrong = takeRandom(
+      [...source.filter((x) => x.id !== line.id).map((x) => x.zh), ...filler].filter((x) => x !== line.zh),
+      3,
+    );
+    out.push({ kind: 'fill', prompt: line.ja, options: shuffle([line.zh, ...wrong]), answer: line.zh });
+  }
+  return out;
+}
+
+function buildOrderQuestions(conversation: ConversationItem[], total: number): Question[] {
+  const source = conversation.length > 0 ? conversation : [{ id: 'f', scene: '', zh: '我 是 学生。', ja: '私は学生です。', difficulty: 1, keywords: [] }];
+  const out: Question[] = [];
+  for (let i = 0; i < total; i += 1) {
+    const line = source[i % source.length];
+    out.push({
+      kind: 'order',
+      prompt: line.ja,
+      options: shuffle(line.zh.split(' ').filter(Boolean)),
+      answer: line.zh,
+    });
+  }
+  return out;
+}
+
+function buildMatchQuestions(pinyin: PinyinItem[], kanji: KanjiItem[], total: number): Question[] {
+  const out: Question[] = [];
+  const py = pinyin.length > 0 ? pinyin : [{ value: 'a', kana: 'ア', tipJa: '', difficulty: 1 }];
+  const kz = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
+  for (let i = 0; i < total; i += 1) {
+    if (i % 2 === 0) {
+      const t = py[i % py.length];
+      const wrong = takeRandom(py.filter((x) => x.value !== t.value), 3).map((x) => x.kana);
+      out.push({ kind: 'match', prompt: `${t.value} の読みは？`, options: shuffle([t.kana, ...wrong]), answer: t.kana });
+    } else {
+      const t = kz[i % kz.length];
+      const wrong = takeRandom(kz.filter((x) => x.hanzi !== t.hanzi), 3).map((x) => x.ja);
+      out.push({ kind: 'match', prompt: `${t.hanzi} の意味は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja });
+    }
+  }
+  return shuffle(out);
+}
+
+function buildMemoryRound(pinyin: PinyinItem[], kanji: KanjiItem[]): MemoryCard[] {
+  const pyPairs = pinyin.map((x, i) => [
+    { key: `p-${i}-a`, text: x.value, pair: x.kana },
+    { key: `p-${i}-b`, text: x.kana, pair: x.value },
+  ]);
+  const kzPairs = kanji.map((x, i) => [
+    { key: `k-${i}-a`, text: x.hanzi, pair: x.ja },
+    { key: `k-${i}-b`, text: x.ja, pair: x.hanzi },
+  ]);
+  const allPairs = [...pyPairs, ...kzPairs];
+  const pairCount = Math.max(4, Math.min(6, allPairs.length)); // 8-12 cards
+  return shuffle(takeRandom(allPairs, pairCount).flat());
 }
 
 export default function UnitPage() {
@@ -78,25 +171,139 @@ export default function UnitPage() {
   const { profile } = useProfile();
   const unitId = Number(id || '0');
   const unit = getUnit(unitId);
+  const gameRef = useRef<HTMLDivElement | null>(null);
 
+  const [phase, setPhase] = useState<'learn' | 'game' | 'result'>('learn');
+  const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [msg, setMsg] = useState('ゲームスタート！');
-  const [gameDone, setGameDone] = useState(false);
-  const [memorySolved, setMemorySolved] = useState<string[]>([]);
+  const [msg, setMsg] = useState('準備OK！');
+  const [lockedClick, setLockedClick] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [pickWords, setPickWords] = useState<string[]>([]);
+  const [timeLeft, setTimeLeft] = useState(10);
+  const [resultPass, setResultPass] = useState(false);
+
+  const [memoryDeck, setMemoryDeck] = useState<MemoryCard[]>([]);
   const [memoryOpen, setMemoryOpen] = useState<string[]>([]);
+  const [memorySolved, setMemorySolved] = useState<string[]>([]);
+  const [memoryMistakes, setMemoryMistakes] = useState(0);
 
   const locked = unit ? !isUnitUnlocked(profile, unit.id) : true;
+  const scope = useMemo(() => (unit ? buildScope(unit.id) : []), [unit?.id]);
+  const pinyin = scope.flatMap((u) => u.pinyin);
+  const kanji = scope.flatMap((u) => u.kanji);
+  const conversation = scope.flatMap((u) => u.conversation);
+  const totalQuestions = unit?.isTest ? 10 : 5;
+  const passRate = unit?.isTest ? 0.8 : 0.6;
 
-  const fillQuestion = useMemo(() => {
-    if (!unit) return null;
-    const line = unit.conversation[0];
-    if (!line) return null;
-    const answer = line.zh;
-    const opts = shuffle([answer, '谢谢', '再见', '我不懂']).slice(0, 3);
-    if (!opts.includes(answer)) opts[0] = answer;
-    return { q: line.ja, answer, options: shuffle(opts) };
-  }, [unit?.id]);
+  const baseGameKind = unit?.gameType === 'memory' ? 'memory' : unit?.gameType || 'fill';
+  const mixedQuestions = useMemo(() => {
+    if (!unit?.isTest) return [];
+    const pattern: QuestionKind[] = ['match', 'tone', 'puzzle', 'fill', 'order', 'hunt'];
+    const tone = buildToneQuestions(kanji, totalQuestions);
+    const puzzle = buildPuzzleQuestions(kanji, totalQuestions);
+    const hunt = buildHuntQuestions(kanji, totalQuestions);
+    const fill = buildFillQuestions(conversation, totalQuestions);
+    const order = buildOrderQuestions(conversation, totalQuestions);
+    const match = buildMatchQuestions(pinyin, kanji, totalQuestions);
+    const out: Question[] = [];
+    for (let i = 0; i < totalQuestions; i += 1) {
+      const k = pattern[i % pattern.length];
+      if (k === 'tone') out.push(tone[i % tone.length]);
+      if (k === 'puzzle') out.push(puzzle[i % puzzle.length]);
+      if (k === 'hunt') out.push(hunt[i % hunt.length]);
+      if (k === 'fill') out.push(fill[i % fill.length]);
+      if (k === 'order') out.push(order[i % order.length]);
+      if (k === 'match') out.push(match[i % match.length]);
+    }
+    return shuffle(out);
+  }, [unit?.id, pinyin.length, kanji.length, conversation.length]);
+
+  const normalQuestions = useMemo(() => {
+    if (!unit || unit.isTest || baseGameKind === 'memory') return [];
+    if (baseGameKind === 'tone') return buildToneQuestions(kanji, totalQuestions);
+    if (baseGameKind === 'puzzle') return buildPuzzleQuestions(kanji, totalQuestions);
+    if (baseGameKind === 'hunt') return buildHuntQuestions(kanji, totalQuestions);
+    if (baseGameKind === 'fill') return buildFillQuestions(conversation, totalQuestions);
+    return buildOrderQuestions(conversation, totalQuestions);
+  }, [unit?.id, baseGameKind, pinyin.length, kanji.length, conversation.length]);
+
+  const current = unit?.isTest ? mixedQuestions[index] : normalQuestions[index];
+
+  function resetGame() {
+    setPhase('game');
+    setIndex(0);
+    setScore(0);
+    setMsg('ゲームスタート！');
+    setLockedClick(false);
+    setSelectedId(null);
+    setPickWords([]);
+    setTimeLeft(10);
+    setResultPass(false);
+    setMemoryDeck(buildMemoryRound(pinyin, kanji));
+    setMemoryOpen([]);
+    setMemorySolved([]);
+    setMemoryMistakes(0);
+  }
+
+  function finish(finalScore: number) {
+    const pass = finalScore / totalQuestions >= passRate;
+    setResultPass(pass);
+    setPhase('result');
+    if (pass && unit) {
+      clearUnit(profile, unit.id, unit.stars * 3, 1);
+      updateLearned(profile, kanji.map((x) => x.hanzi), conversation.map((x) => x.zh));
+    }
+  }
+
+  function nextAfterFeedback(ok: boolean, answerText: string, selected?: string) {
+    if (lockedClick) return;
+    setLockedClick(true);
+    setSelectedId(selected ?? null);
+    const nextScore = score + (ok ? 1 : 0);
+    setScore(nextScore);
+    setMsg(ok ? '正解！' : `おしい！ 正解: ${answerText}`);
+    setTimeout(() => {
+      const nextIndex = index + 1;
+      setIndex(nextIndex);
+      setSelectedId(null);
+      setLockedClick(false);
+      setPickWords([]);
+      setTimeLeft(10);
+      if (baseGameKind === 'memory' && !unit?.isTest) {
+        setMemoryDeck(buildMemoryRound(pinyin, kanji));
+        setMemoryOpen([]);
+        setMemorySolved([]);
+        setMemoryMistakes(0);
+      }
+      if (nextIndex >= totalQuestions) {
+        finish(nextScore);
+      }
+    }, 1500);
+  }
+
+  useEffect(() => {
+    if (phase !== 'game' || lockedClick) return;
+    const isHunt = (unit?.isTest && current?.kind === 'hunt') || (!unit?.isTest && baseGameKind === 'hunt');
+    if (!isHunt) return;
+    const timer = setInterval(() => {
+      setTimeLeft((t) => {
+        if (t <= 1) {
+          clearInterval(timer);
+          nextAfterFeedback(false, current?.answer || '');
+          return 0;
+        }
+        return t - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, lockedClick, index, unit?.isTest, current?.kind]);
+
+  useEffect(() => {
+    if (phase === 'game' && baseGameKind === 'memory' && memoryDeck.length === 0) {
+      setMemoryDeck(buildMemoryRound(pinyin, kanji));
+    }
+  }, [phase, baseGameKind, memoryDeck.length, pinyin.length, kanji.length]);
 
   if (!unit) {
     return (
@@ -110,195 +317,200 @@ export default function UnitPage() {
     return (
       <Layout title={`ユニット ${unit.id}`} subtitle="このユニットはまだロック中です">
         <div className="rounded-3xl bg-slate-100 p-8 border-2 border-slate-300 text-center">
-          <p className="text-xl font-black text-slate-500 mb-3">🔒 先に前のユニットをクリアしよう！</p>
+          <p className="text-xl font-black text-slate-500 mb-3">先に前のユニットをクリアしよう！</p>
           <button onClick={() => navigate('/')} className="rounded-full px-6 py-3 bg-pink-400 text-white font-black btn-3d">ホームへ</button>
         </div>
       </Layout>
     );
   }
 
-  function finishIfReady(targetUnit: NonNullable<typeof unit>, nextScore: number, nextTotal: number) {
-    if (nextTotal < 5) return;
-    const pass = targetUnit.isTest ? nextScore / nextTotal >= 0.8 : nextScore >= 3;
-    if (pass) {
-      clearUnit(profile, targetUnit.id, targetUnit.stars * 3, 1);
-      updateLearned(profile, targetUnit.kanji.map((x) => x.hanzi), targetUnit.conversation.map((x) => x.zh));
-      setMsg('ユニットクリア！次へ進めるよ 🎉');
-      setGameDone(true);
-    } else {
-      setMsg('もう一回チャレンジしよう！（テストは80%以上）');
-    }
-  }
-
-  function answerSimple(ok: boolean) {
-    if (!unit) return;
-    const nextTotal = total + 1;
-    const nextScore = score + (ok ? 1 : 0);
-    setTotal(nextTotal);
-    setScore(nextScore);
-    setMsg(ok ? '正解！⭐' : 'おしい！');
-    finishIfReady(unit, nextScore, nextTotal);
-  }
-
-  const memoryPairs = useMemo(() => {
-    const source = unit.pinyin.slice(0, 3);
-    return shuffle(
-      source.flatMap((x) => [
-        { key: `${x.value}-a`, text: x.value, pair: x.kana },
-        { key: `${x.value}-b`, text: x.kana, pair: x.value },
-      ]),
-    );
-  }, [unit.id]);
-
-  function flipMemory(key: string) {
-    if (memorySolved.includes(key) || memoryOpen.includes(key) || memoryOpen.length >= 2 || gameDone) return;
-    const opened = [...memoryOpen, key];
-    setMemoryOpen(opened);
-    if (opened.length === 2) {
-      const a = memoryPairs.find((x) => x.key === opened[0]);
-      const b = memoryPairs.find((x) => x.key === opened[1]);
-      const ok = Boolean(a && b && a.pair === b.text && b.pair === a.text);
-      if (ok) {
-        setMemorySolved((s) => [...s, opened[0], opened[1]]);
-        setTimeout(() => setMemoryOpen([]), 250);
-        answerSimple(true);
-      } else {
-        setTimeout(() => setMemoryOpen([]), 500);
-        answerSimple(false);
-      }
-    }
-  }
-
   return (
     <Layout title={`ユニット ${unit.id}：${unit.titleJa}`} subtitle={`${unit.titleZh} • ${unit.isTest ? 'テスト' : '学習'} • ⭐${unit.stars}`}>
       <div className="space-y-6">
         <section className="rounded-3xl glass-panel border-2 border-pink-200 p-4 md:p-6 flex items-center gap-4">
-          <Guide keyName={unit.guide} />
+          {guideByKey(unit.guide)}
           <div>
             <p className="text-lg font-black text-pink-600">ガイドキャラといっしょに進もう！</p>
-            <p className="text-sm font-bold text-slate-600">スコア: {score}/{total} • {msg}</p>
+            <p className="text-sm font-bold text-slate-600">
+              {phase === 'game' ? `問題 ${Math.min(index + 1, totalQuestions)}/${totalQuestions} • 正解 ${score}` : msg}
+            </p>
           </div>
         </section>
 
-        <PinyinCorner pinyin={unit.pinyin} />
-        <KanjiCorner kanji={unit.kanji} />
-        <ConversationCorner conversation={unit.conversation} />
-
-        <section className="rounded-3xl bg-purple-50 border-2 border-purple-200 p-4 md:p-6 card-shadow">
-          <h3 className="text-xl font-black text-purple-600 mb-4">ゲームタイム！</h3>
-
-          {unit.gameType === 'memory' && (
-            <div className="grid grid-cols-3 gap-3">
-              {memoryPairs.map((card) => {
-                const open = memoryOpen.includes(card.key) || memorySolved.includes(card.key);
-                const solved = memorySolved.includes(card.key);
-                return (
-                  <button
-                    key={card.key}
-                    onClick={() => flipMemory(card.key)}
-                    className={`h-20 rounded-2xl border-4 font-black text-xl btn-3d ${open ? 'bg-white border-pink-300 text-pink-600' : 'bg-pink-300 border-pink-400 text-transparent'} ${solved ? 'ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)]' : ''}`}
-                  >
-                    {open ? card.text : '？'}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {unit.gameType === 'tone' && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {[1, 2, 3, 4].map((tone) => (
-                <button key={tone} onClick={() => answerSimple(tone === 4)} className="rounded-2xl border-4 border-purple-200 bg-white p-4 btn-3d hover:bg-purple-100">
-                  <p className="text-xl font-black text-purple-700">{tone}声</p>
-                </button>
+        <section className="space-y-6">
+          <section className="rounded-3xl bg-pink-50 border-2 border-pink-200 p-4 md:p-6 card-shadow">
+            <h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {pinyin.map((item) => (
+                <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
+                  <p className="text-3xl font-black text-pink-600">{item.value}</p>
+                  <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
+                </div>
               ))}
             </div>
-          )}
-
-          {unit.gameType === 'puzzle' && (
-            <div className="space-y-4">
-              <p className="font-bold text-slate-600">「{unit.kanji[0]?.hanzi}」を作る部品を選ぼう</p>
-              <div className="grid grid-cols-2 gap-3">
-                {shuffle([unit.kanji[0]?.hanzi, unit.kanji[1]?.hanzi, unit.kanji[2]?.hanzi]).map((x) => (
-                  <button key={x} onClick={() => answerSimple(x === unit.kanji[0]?.hanzi)} className="rounded-2xl border-4 border-blue-200 bg-white p-4 text-3xl font-black btn-3d hover:bg-blue-50">{x}</button>
-                ))}
-              </div>
+          </section>
+          <section className="rounded-3xl bg-blue-50 border-2 border-blue-200 p-4 md:p-6 card-shadow">
+            <h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {kanji.map((item) => (
+                <div key={`${item.hanzi}-${item.pinyin}`} className="rounded-2xl bg-white border-2 border-blue-200 p-4 text-center btn-3d">
+                  <p className="text-4xl font-black text-slate-700">{item.hanzi}</p>
+                  <p className="text-xs font-bold text-slate-500">{item.ja}</p>
+                </div>
+              ))}
             </div>
-          )}
-
-          {unit.gameType === 'hunt' && (
-            <div className="space-y-4">
-              <p className="text-lg font-black text-purple-700">目標: {unit.kanji[0]?.hanzi}</p>
-              <div className="grid grid-cols-3 gap-3">
-                {shuffle([unit.kanji[0]?.hanzi, unit.kanji[1]?.hanzi, unit.kanji[2]?.hanzi, unit.kanji[3]?.hanzi, unit.kanji[4]?.hanzi]).map((x, i) => (
-                  <button key={`${x}-${i}`} onClick={() => answerSimple(x === unit.kanji[0]?.hanzi)} className="rounded-2xl border-4 border-violet-200 bg-white p-4 text-3xl font-black btn-3d hover:bg-violet-50">{x}</button>
-                ))}
-              </div>
+          </section>
+          <section className="rounded-3xl bg-yellow-50 border-2 border-yellow-200 p-4 md:p-6 card-shadow">
+            <h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
+            <div className="space-y-3">
+              {conversation.map((item, i) => (
+                <div key={item.id} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
+                  <div className={`chat-bubble ${i % 2 === 0 ? 'left border border-yellow-200' : 'right border border-pink-200'} max-w-[90%]`}>
+                    <p className="text-xl font-black text-slate-700">{item.zh}</p>
+                    <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-
-          {unit.gameType === 'fill' && fillQuestion && (
-            <div className="space-y-4">
-              <p className="text-sm font-bold text-slate-500">次の日本語に合う中国語は？</p>
-              <p className="text-xl font-black text-slate-700">「{fillQuestion.q}」</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {fillQuestion.options.map((opt) => (
-                  <button key={opt} onClick={() => answerSimple(opt === fillQuestion.answer)} className="rounded-2xl border-4 border-amber-200 bg-white p-4 text-xl font-black text-amber-700 btn-3d hover:bg-amber-50">{opt}</button>
-                ))}
-              </div>
+          </section>
+          {phase === 'learn' && (
+            <div className="text-center">
+              <button
+                onClick={() => {
+                  setPhase('game');
+                  setMsg('ゲームスタート！');
+                  setTimeout(() => gameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+                }}
+                className="rounded-full px-8 py-3 bg-purple-500 text-white font-black btn-3d pulse-glow"
+              >
+                ゲームに挑戦！
+              </button>
             </div>
-          )}
-
-          {unit.gameType === 'order' && (
-            <OrderMini phrase={unit.conversation[0]?.zh || '我 是 日本人'} onCheck={answerSimple} />
           )}
         </section>
 
-        {gameDone && (
+        {phase === 'game' && (
+          <section ref={gameRef} className="rounded-3xl bg-purple-50 border-2 border-purple-200 p-4 md:p-6 card-shadow">
+            <h3 className="text-xl font-black text-purple-600 mb-4">ゲームタイム！</h3>
+            <p className="text-sm font-bold text-slate-500 mb-3">{msg}</p>
+
+            {!unit.isTest && baseGameKind === 'memory' ? (
+              <div>
+                <p className="text-sm font-bold text-slate-500 mb-2">ラウンド {index + 1} / {totalQuestions}</p>
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                  {memoryDeck.map((card) => {
+                    const open = memoryOpen.includes(card.key) || memorySolved.includes(card.key);
+                    const solved = memorySolved.includes(card.key);
+                    return (
+                      <button
+                        key={card.key}
+                        disabled={lockedClick}
+                        onClick={() => {
+                          if (lockedClick || open || memoryOpen.length >= 2) return;
+                          const opened = [...memoryOpen, card.key];
+                          setMemoryOpen(opened);
+                          if (opened.length === 2) {
+                            const a = memoryDeck.find((x) => x.key === opened[0]);
+                            const b = memoryDeck.find((x) => x.key === opened[1]);
+                            const ok = Boolean(a && b && a.pair === b.text && b.pair === a.text);
+                            if (ok) {
+                              const nextSolved = [...memorySolved, opened[0], opened[1]];
+                              setMemorySolved(nextSolved);
+                              setTimeout(() => {
+                                setMemoryOpen([]);
+                                if (nextSolved.length === memoryDeck.length) {
+                                  nextAfterFeedback(memoryMistakes <= 2, 'ペア完成', card.key);
+                                }
+                              }, 240);
+                            } else {
+                              setMemoryMistakes((m) => m + 1);
+                              setTimeout(() => setMemoryOpen([]), 500);
+                            }
+                          }
+                        }}
+                        className={`h-20 rounded-2xl border-4 font-black text-lg btn-3d ${
+                          open ? 'bg-white border-pink-300 text-pink-600' : 'bg-pink-300 border-pink-400 text-transparent'
+                        } ${solved ? 'ring-2 ring-yellow-400 shadow-[0_0_12px_rgba(250,204,21,0.6)] pop-in' : ''}`}
+                      >
+                        {open ? card.text : '？'}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : current ? (
+              <div className="space-y-4">
+                <p className="text-xl font-black text-slate-700">{current.prompt}</p>
+                {(current.kind === 'hunt') && <p className="text-sm font-bold text-slate-500">残り時間: {timeLeft}秒</p>}
+
+                {current.kind === 'order' ? (
+                  <>
+                    <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-white p-3 min-h-[56px] flex flex-wrap gap-2">
+                      {pickWords.map((w, i) => (
+                        <button key={`${w}-${i}`} onClick={() => setPickWords((arr) => arr.filter((_, idx) => idx !== i))} className="rounded-xl bg-orange-200 px-3 py-1 font-black text-orange-700">
+                          {w}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {current.options.map((w, i) => (
+                        <button key={`${w}-${i}`} disabled={lockedClick} onClick={() => setPickWords((arr) => [...arr, w])} className="rounded-xl border-2 border-dashed border-orange-300 bg-white px-4 py-2 font-black text-orange-600 btn-3d">
+                          {w}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      disabled={lockedClick || pickWords.length === 0}
+                      onClick={() => nextAfterFeedback(pickWords.join(' ') === current.answer, current.answer, 'order-check')}
+                      className={`rounded-full px-6 py-3 text-white font-black btn-3d ${selectedId === 'order-check' ? (pickWords.join(' ') === current.answer ? 'bg-green-500 pop-in' : 'bg-red-500 shake-soft') : 'bg-emerald-400'} disabled:opacity-50`}
+                    >
+                      チェック
+                    </button>
+                  </>
+                ) : (
+                  <div className={`grid gap-3 ${current.kind === 'hunt' ? 'grid-cols-4' : 'grid-cols-1 md:grid-cols-2'}`}>
+                    {current.options.map((opt, i) => {
+                      const idKey = `opt-${i}`;
+                      const correct = opt === current.answer;
+                      const picked = selectedId === idKey;
+                      return (
+                        <button
+                          key={idKey}
+                          disabled={lockedClick}
+                          onClick={() => nextAfterFeedback(correct, current.answer, idKey)}
+                          className={`rounded-2xl border-4 bg-white p-3 md:p-4 font-black btn-3d ${
+                            current.kind === 'hunt' ? 'text-2xl' : 'text-xl'
+                          } ${
+                            picked ? (correct ? 'border-green-400 bg-green-50 text-green-700 pop-in' : 'border-red-400 bg-red-50 text-red-600 shake-soft') : 'border-violet-200 text-violet-700 hover:bg-violet-50'
+                          }`}
+                        >
+                          {opt}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : null}
+          </section>
+        )}
+
+        {phase === 'result' && (
           <section className="rounded-3xl bg-yellow-50 border-4 border-yellow-300 p-6 text-center card-shadow confetti">
-            <p className="text-2xl font-black text-yellow-600 mb-3">ユニットクリア！</p>
-            <p className="font-bold text-slate-600 mb-4">⭐ +{unit.stars * 3} を獲得！ 次のユニットが解放されました。</p>
-            <div className="flex justify-center gap-3">
+            <p className="text-2xl font-black text-yellow-600 mb-2">結果発表！</p>
+            <p className="font-black text-slate-700 mb-2">{score} / {totalQuestions} 正解</p>
+            <p className="font-bold text-slate-600 mb-4">{resultPass ? 'クリア！すごい！' : 'もう一回チャレンジ！'}</p>
+            {resultPass ? <p className="font-bold text-pink-600 mb-4">⭐ クリア報酬獲得（再挑戦時は半分）</p> : null}
+            <div className="flex flex-wrap justify-center gap-3">
+              <button onClick={resetGame} className="rounded-full px-6 py-3 bg-purple-500 text-white font-black btn-3d">もう一回チャレンジ！</button>
               <button onClick={() => navigate('/')} className="rounded-full px-6 py-3 bg-pink-400 text-white font-black btn-3d">ホームへ</button>
-              {unit.id < 15 && (
+              {resultPass && unit.id < 15 ? (
                 <button onClick={() => navigate(`/unit/${unit.id + 1}`)} className="rounded-full px-6 py-3 bg-emerald-400 text-white font-black btn-3d">次のユニット</button>
-              )}
+              ) : null}
             </div>
           </section>
         )}
       </div>
     </Layout>
-  );
-}
-
-function OrderMini({ phrase, onCheck }: { phrase: string; onCheck: (ok: boolean) => void }) {
-  const answerWords = phrase.split('');
-  const source = useMemo(() => shuffle(answerWords), [phrase]);
-  const [picked, setPicked] = useState<string[]>([]);
-  const done = picked.length === answerWords.length;
-  const current = picked.join('');
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm font-bold text-slate-500">正しい語順に並べよう（文字タップ）</p>
-      <div className="rounded-2xl border-2 border-dashed border-orange-300 bg-white p-3 min-h-[56px] flex flex-wrap gap-2">
-        {picked.map((w, i) => <span key={`${w}-${i}`} className="rounded-xl bg-orange-200 px-3 py-1 font-black text-orange-700">{w}</span>)}
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {source.map((w, i) => (
-          <button key={`${w}-${i}`} onClick={() => setPicked((p) => (p.length < answerWords.length ? [...p, w] : p))} className="rounded-xl border-2 border-dashed border-orange-300 bg-white px-4 py-2 font-black text-orange-600 btn-3d">{w}</button>
-        ))}
-      </div>
-      <button
-        disabled={!done}
-        onClick={() => {
-          onCheck(current === phrase);
-          setPicked([]);
-        }}
-        className="rounded-full px-6 py-3 bg-emerald-400 text-white font-black btn-3d disabled:opacity-50"
-      >
-        チェック
-      </button>
-    </div>
   );
 }
