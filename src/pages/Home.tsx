@@ -1,58 +1,74 @@
 
+import { Link } from 'react-router-dom';
+import { KittyGuide, MelodyGuide, CinnamorollGuide, PompompurinGuide, KuromiGuide, PochaccoGuide } from '../assets/characters/characters';
+import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
+import { getProgress } from '../utils/storage';
+import type { ReactElement } from 'react';
 
 export default function Home() {
-  const { profile, setProfile } = useProfile();
-  
+  const { profile } = useProfile();
+  const progress = getProgress(profile);
   const isSister9 = profile === 'sister9';
   const welcomeMessage = isSister9 ? 'いもうとちゃん' : 'おねえちゃん';
-  const stars = localStorage.getItem(`stars_${profile}`) || '0';
+  const targetToday = isSister9 ? 20 : 30;
+  const todayProgress = Math.min(100, Math.round((progress.stars / targetToday) * 100));
 
   return (
-    <div className="min-h-screen p-6 md:p-12">
-      <div className="max-w-4xl mx-auto">
-        <header className="flex justify-between items-center mb-12 bg-white/80 p-4 rounded-3xl card-shadow backdrop-blur-sm">
+    <Layout title="ホーム" subtitle="ふたり専用の中国語チャレンジ">
+      <div className="space-y-5">
+        <header className="rounded-3xl bg-pink-50 p-4 md:p-6">
           <div className="flex items-center gap-4">
-            {/* Custom Hello Kitty SVG placeholder */}
-            <div className="w-16 h-16 bg-sanrio-pink rounded-full flex items-center justify-center text-white font-bold text-xs">Kitty</div>
+            <KittyGuide className="h-16 w-16 animate-bob" />
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-pink-500">ここはふたりの中国語ランドだよ！</h1>
-              <p className="text-lg font-medium text-slate-600">ようこそ、<span className="text-pink-600 font-bold">{welcomeMessage}</span>！</p>
+              <h2 className="text-xl font-bold text-pink-500 md:text-2xl">ここはふたりの中国語ランドだよ！</h2>
+              <p className="text-sm font-medium text-slate-600 md:text-base">
+                ようこそ、<span className="font-bold text-pink-600">{welcomeMessage}</span>！
+              </p>
             </div>
           </div>
-          
-          <div className="flex flex-col gap-2">
-            <div className="bg-yellow-100 px-4 py-2 rounded-full text-yellow-600 font-bold flex items-center gap-2">
-              ⭐ {stars}
+          <div className="mt-4 rounded-2xl bg-white p-4">
+            <div className="mb-1 flex items-center justify-between text-sm">
+              <span className="font-bold text-slate-700">今日のしんちょく</span>
+              <span className="font-bold text-pink-500">{todayProgress}%</span>
             </div>
-            <select 
-              value={profile}
-              onChange={(e) => setProfile(e.target.value as 'sister12' | 'sister9')}
-              className="bg-pink-100 text-pink-700 font-bold px-4 py-2 rounded-xl outline-none cursor-pointer"
-            >
-              <option value="sister9">👧 妹 (9歳)</option>
-              <option value="sister12">👩 姉 (12歳)</option>
-            </select>
+            <div className="h-4 overflow-hidden rounded-full bg-pink-100">
+              <div className="h-full rounded-full bg-pink-400 transition-all" style={{ width: `${todayProgress}%` }} />
+            </div>
+            <p className="mt-2 text-sm font-semibold text-yellow-600">⭐ {progress.stars} / ❤️ {progress.hearts}</p>
           </div>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <ModuleCard title="ピンインランド" color="bg-sanrio-pink" icon="🎵" desc="My Melodyと発音の練習" />
-          <ModuleCard title="漢字アドベンチャー" color="bg-sanrio-blue" icon="✍️" desc="Cinnamorollと漢字を学ぶ" />
-          <ModuleCard title="にちじょうかいわ" color="bg-yellow-300" icon="💬" desc="Pompompurinとお話しする" />
-          <ModuleCard title="チャレンジタワー" color="bg-purple-300" icon="👑" desc="Kuromiのテストに挑戦！" />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <ModuleCard to="/pinyin" title="ピンインランド" color="bg-pink-300" desc="My Melodyと発音の練習" guide={<MelodyGuide className="h-16 w-16" />} />
+          <ModuleCard to="/kanji" title="漢字アドベンチャー" color="bg-sky-300" desc="Cinnamorollと漢字を学ぶ" guide={<CinnamorollGuide className="h-16 w-16" />} />
+          <ModuleCard to="/conversation" title="にちじょうかいわ" color="bg-amber-200" desc="Pompompurinと会話する" guide={<PompompurinGuide className="h-16 w-16" />} />
+          <ModuleCard to="/challenge" title="チャレンジタワー" color="bg-violet-300" desc="Kuromiの総合テスト" guide={<KuromiGuide className="h-16 w-16" />} />
+          <ModuleCard to="/myroom" title="マイルーム" color="bg-emerald-200" desc="Pochaccoと成長を確認" guide={<PochaccoGuide className="h-16 w-16" />} />
         </div>
       </div>
-    </div>
+    </Layout>
   );
 }
 
-function ModuleCard({ title, color, icon, desc }: { title: string, color: string, icon: string, desc: string }) {
+function ModuleCard({
+  to,
+  title,
+  color,
+  desc,
+  guide,
+}: {
+  to: string;
+  title: string;
+  color: string;
+  desc: string;
+  guide: ReactElement;
+}) {
   return (
-    <div className={`${color} rounded-3xl p-6 card-shadow transform transition-transform hover:-translate-y-2 cursor-pointer flex flex-col items-center text-center`}>
-      <div className="text-6xl mb-4">{icon}</div>
-      <h2 className="text-2xl font-bold text-white drop-shadow-md mb-2">{title}</h2>
-      <p className="text-white/90 font-medium">{desc}</p>
-    </div>
+    <Link to={to} className={`${color} card-shadow flex min-h-40 transform flex-col items-center rounded-3xl p-6 text-center transition hover:-translate-y-1`} aria-label={`${title}へ`}>
+      <div className="mb-3">{guide}</div>
+      <h3 className="mb-1 text-xl font-bold text-white drop-shadow">{title}</h3>
+      <p className="font-medium text-white/95">{desc}</p>
+    </Link>
   );
 }

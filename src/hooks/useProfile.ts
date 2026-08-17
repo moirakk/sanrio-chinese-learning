@@ -1,6 +1,38 @@
 import { useState, useEffect } from 'react';
 
 export type Profile = 'sister12' | 'sister9';
+export type DifficultyLevel = 1 | 2 | 3;
+
+export interface ProfileMeta {
+  id: Profile;
+  label: string;
+  age: number;
+  routeName: string;
+  description: string;
+  defaultTimerSec: number;
+  uiMode: 'simple' | 'dense';
+}
+
+export const PROFILE_META: Record<Profile, ProfileMeta> = {
+  sister9: {
+    id: 'sister9',
+    label: '妹 (9歳)',
+    age: 9,
+    routeName: 'やさしいルート',
+    description: '大きいボタン、やさしい問題、ゆっくりタイマー',
+    defaultTimerSec: 45,
+    uiMode: 'simple',
+  },
+  sister12: {
+    id: 'sister12',
+    label: '姉 (12歳)',
+    age: 12,
+    routeName: 'チャレンジルート',
+    description: '問題多め、会話長め、タイマー短め',
+    defaultTimerSec: 30,
+    uiMode: 'dense',
+  },
+};
 
 export function useProfile() {
   const [profile, setProfile] = useState<Profile>(() => {
@@ -11,5 +43,5 @@ export function useProfile() {
     localStorage.setItem('sanrio_profile', profile);
   }, [profile]);
 
-  return { profile, setProfile };
+  return { profile, setProfile, meta: PROFILE_META[profile] };
 }

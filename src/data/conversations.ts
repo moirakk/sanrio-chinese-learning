@@ -1,0 +1,38 @@
+import type { ConversationItem } from '../types';
+
+export const conversations: ConversationItem[] = [
+  { id: 'self-1', scene: '自己紹介', zh: '你好，我叫美香。', ja: 'こんにちは、わたしは美香です。', keywords: ['你好', '我叫'], difficulty: 1 },
+  { id: 'self-2', scene: '自己紹介', zh: '我是日本人。', ja: 'わたしは日本人です。', keywords: ['我是', '日本人'], difficulty: 1 },
+  { id: 'self-3', scene: '自己紹介', zh: '我九岁。', ja: 'わたしは9歳です。', keywords: ['我', '九岁'], difficulty: 1 },
+  { id: 'self-4', scene: '自己紹介', zh: '我十二岁。', ja: 'わたしは12歳です。', keywords: ['我', '十二岁'], difficulty: 1 },
+  { id: 'greet-1', scene: 'あいさつ', zh: '早上好！', ja: 'おはよう！', keywords: ['早上好'], difficulty: 1 },
+  { id: 'greet-2', scene: 'あいさつ', zh: '晚上好！', ja: 'こんばんは！', keywords: ['晚上好'], difficulty: 1 },
+  { id: 'greet-3', scene: 'あいさつ', zh: '再见。', ja: 'またね。', keywords: ['再见'], difficulty: 1 },
+  { id: 'greet-4', scene: 'あいさつ', zh: '谢谢你。', ja: 'ありがとう。', keywords: ['谢谢'], difficulty: 1 },
+  { id: 'greet-5', scene: 'あいさつ', zh: '不客气。', ja: 'どういたしまして。', keywords: ['不客气'], difficulty: 1 },
+  { id: 'shop-1', scene: '買いもの', zh: '这个多少钱？', ja: 'これはいくらですか？', keywords: ['多少钱'], difficulty: 2 },
+  { id: 'shop-2', scene: '買いもの', zh: '太贵了。', ja: '高すぎます。', keywords: ['太贵了'], difficulty: 2 },
+  { id: 'shop-3', scene: '買いもの', zh: '便宜一点，可以吗？', ja: 'もう少し安くできますか？', keywords: ['便宜一点'], difficulty: 2 },
+  { id: 'shop-4', scene: '買いもの', zh: '我要这个。', ja: 'これをください。', keywords: ['我要这个'], difficulty: 1 },
+  { id: 'road-1', scene: '道をたずねる', zh: '请问，车站在哪里？', ja: 'すみません、駅はどこですか？', keywords: ['请问', '在哪里'], difficulty: 2 },
+  { id: 'road-2', scene: '道をたずねる', zh: '往左走。', ja: '左へ行ってください。', keywords: ['往左'], difficulty: 1 },
+  { id: 'road-3', scene: '道をたずねる', zh: '往右走。', ja: '右へ行ってください。', keywords: ['往右'], difficulty: 1 },
+  { id: 'road-4', scene: '道をたずねる', zh: '一直往前走。', ja: 'まっすぐ進んでください。', keywords: ['往前'], difficulty: 2 },
+  { id: 'school-1', scene: '学校', zh: '老师好！', ja: '先生こんにちは！', keywords: ['老师好'], difficulty: 1 },
+  { id: 'school-2', scene: '学校', zh: '这是什么？', ja: 'これは何ですか？', keywords: ['这是什么'], difficulty: 1 },
+  { id: 'school-3', scene: '学校', zh: '我不懂。', ja: 'わかりません。', keywords: ['我不懂'], difficulty: 1 },
+  { id: 'school-4', scene: '学校', zh: '请再说一次。', ja: 'もう一度言ってください。', keywords: ['再说一次'], difficulty: 2 },
+  { id: 'rest-1', scene: 'レストラン', zh: '我要这个菜。', ja: 'この料理をください。', keywords: ['我要'], difficulty: 1 },
+  { id: 'rest-2', scene: 'レストラン', zh: '很好吃！', ja: 'とてもおいしい！', keywords: ['好吃'], difficulty: 1 },
+  { id: 'rest-3', scene: 'レストラン', zh: '请买单。', ja: 'お会計お願いします。', keywords: ['买单'], difficulty: 1 },
+  { id: 'rest-4', scene: 'レストラン', zh: '我不要辣。', ja: '辛くしないでください。', keywords: ['不要辣'], difficulty: 2 },
+  { id: 'friend-1', scene: '友だち', zh: '你好吗？', ja: '元気ですか？', keywords: ['你好吗'], difficulty: 1 },
+  { id: 'friend-2', scene: '友だち', zh: '我很好。', ja: '元気です。', keywords: ['我很好'], difficulty: 1 },
+  { id: 'friend-3', scene: '友だち', zh: '我们一起玩吧。', ja: 'いっしょに遊ぼう。', keywords: ['一起'], difficulty: 2 },
+  { id: 'time-1', scene: '時間', zh: '现在几点？', ja: '今何時ですか？', keywords: ['几点'], difficulty: 2 },
+  { id: 'time-2', scene: '時間', zh: '现在三点。', ja: '今3時です。', keywords: ['现在', '三点'], difficulty: 2 },
+  { id: 'travel-1', scene: '旅行', zh: '我想去公园。', ja: '公園に行きたいです。', keywords: ['想去'], difficulty: 2 },
+  { id: 'travel-2', scene: '旅行', zh: '这里很漂亮。', ja: 'ここはとてもきれいです。', keywords: ['漂亮'], difficulty: 2 },
+];
+
+export const sceneNames = Array.from(new Set(conversations.map((item) => item.scene)));
