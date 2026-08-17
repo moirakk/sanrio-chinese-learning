@@ -1,21 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import DifficultyBadge from '../components/DifficultyBadge';
-import FlipGameCard from '../components/FlipGameCard';
 import { CinnamorollGuide } from '../assets/characters/characters';
 import { allKanji, kanjiGroups } from '../data/kanji';
-import { recordGameClear, updateLearned } from '../utils/storage';
+import { recordGameClear, updateLearned, addStars } from '../utils/storage';
 import { useProfile } from '../hooks/useProfile';
 
 const puzzleBank = [
   { hanzi: '好', left: '女', right: '子' },
   { hanzi: '妈', left: '女', right: '马' },
   { hanzi: '姐', left: '女', right: '且' },
-  { hanzi: '喝', left: '口', right: '曷' },
+  { hanzi: '明', left: '日', right: '月' },
+  { hanzi: '休', left: '亻', right: '木' },
 ];
 
-function makeHuntSet() {
-  const target = allKanji[Math.floor(Math.random() * allKanji.length)];
+function makeHuntSet(targetPool: any[]) {
+  const target = targetPool[Math.floor(Math.random() * targetPool.length)];
   const options = [target.hanzi];
   while (options.length < 9) {
     const candidate = allKanji[Math.floor(Math.random() * allKanji.length)].hanzi;
@@ -26,6 +26,7 @@ function makeHuntSet() {
 
 export default function KanjiPage() {
   const { profile, meta } = useProfile();
+  
   const displayGroups = useMemo(
     () =>
       profile === 'sister9'
@@ -34,135 +35,242 @@ export default function KanjiPage() {
     [profile],
   );
 
+  const icons: Record<string, string> = {
+    numbers: '🔢', colors: '🎨', animals: '🐾', family: '👨‍👩‍👧', 
+    body: '👋', food: '🍱', daily: '☀️', nature: '🌿', action: '🏃'
+  };
+
   const [selectedGroup, setSelectedGroup] = useState(displayGroups[0].key);
-  const [puzzle, setPuzzle] = useState(puzzleBank[0]);
+  
+  // Game 3
+  const [puzzleIndex, setPuzzleIndex] = useState(0);
+  const puzzle = puzzleBank[puzzleIndex];
   const [puzzleSelect, setPuzzleSelect] = useState<{ left?: string; right?: string }>({});
   const [puzzleScore, setPuzzleScore] = useState(0);
-  const [puzzleMsg, setPuzzleMsg] = useState('部首をえらんで漢字を作ろう');
+  const [puzzleMsg, setPuzzleMsg] = useState('部首を組み合わせて漢字を作ろう');
+  const [puzzleCompleted, setPuzzleCompleted] = useState(false);
 
-  const [hunt, setHunt] = useState(makeHuntSet());
+  // Game 4
+  const validTargets = displayGroups.flatMap(g => g.items);
+  const [hunt, setHunt] = useState(() => makeHuntSet(validTargets));
   const [huntTime, setHuntTime] = useState(meta.defaultTimerSec);
   const [huntScore, setHuntScore] = useState(0);
   const [huntMsg, setHuntMsg] = useState('目標の漢字を探してね');
+  const [showHint, setShowHint] = useState(true);
+  const [huntCompleted, setHuntCompleted] = useState(false);
 
   const leftParts = Array.from(new Set(puzzleBank.map((p) => p.left)));
   const rightParts = Array.from(new Set(puzzleBank.map((p) => p.right)));
 
+  useEffect(() => {
+    setShowHint(true);
+    const timer = setTimeout(() => setShowHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, [hunt.target]);
+
   function checkPuzzle() {
-    const match = puzzleBank.find((p) => p.left === puzzleSelect.left && p.right === puzzleSelect.right);
-    if (match) {
-      setPuzzleScore((s) => s + 2);
-      setPuzzleMsg(`正解！ ${match.hanzi} ができたよ 🎉`);
-      setPuzzle(puzzleBank[(puzzleBank.indexOf(match) + 1) % puzzleBank.length]);
-      setPuzzleSelect({});
-      updateLearned(profile, [match.hanzi], []);
+    if (!puzzleSelect.left || !puzzleSelect.right) return;
+    
+    if (puzzle.left === puzzleSelect.left && puzzle.right === puzzleSelect.right) {
+      const nextScore = puzzleScore + 2;
+      setPuzzleScore(nextScore);
+      setPuzzleMsg(`大正解！ ${puzzle.hanzi} ができたよ 🎉`);
+      addStars(profile, 2, 0);
+      updateLearned(profile, [puzzle.hanzi], []);
+      
+      if (nextScore >= puzzleBank.length * 2 && !puzzleCompleted) {
+        setPuzzleCompleted(true);
+        recordGameClear(profile, 'kanji-puzzle', 5);
+        addStars(profile, 5, 1);
+      }
+      
+      setTimeout(() => {
+        setPuzzleIndex((i) => (i + 1) % puzzleBank.length);
+        setPuzzleSelect({});
+        setPuzzleMsg('次の漢字を作ってみよう！');
+      }, 1500);
     } else {
-      setPuzzleMsg('おしい！部首の位置を見直そう');
+      setPuzzleMsg('おしい！形がちがうみたい。');
+      setTimeout(() => setPuzzleSelect({}), 1000);
     }
   }
 
   function clickHunt(value: string) {
     if (value === hunt.target) {
-      setHuntScore((s) => s + 1);
-      setHuntMsg('正解！キラキラボーナス');
-      setHunt(makeHuntSet());
-      setHuntTime(meta.defaultTimerSec);
+      const nextScore = huntScore + 1;
+      setHuntScore(nextScore);
+      setHuntMsg('見つけた！キラキラ⭐');
+      addStars(profile, 1, 0);
       updateLearned(profile, [value], []);
+      
+      if (nextScore >= 5 && !huntCompleted) {
+        setHuntCompleted(true);
+        recordGameClear(profile, 'kanji-hunt', 5);
+        addStars(profile, 5, 2);
+      }
+      
+      setTimeout(() => {
+        setHunt(makeHuntSet(validTargets));
+        setHuntTime(meta.defaultTimerSec);
+        setHuntMsg('次の漢字を探してね');
+      }, 1000);
     } else {
       setHuntMsg('ちがうよ。似てる字に注意！');
       setHuntTime((t) => Math.max(5, t - 2));
     }
   }
 
-  if (puzzleScore >= 6) recordGameClear(profile, 'kanji-puzzle', 6);
-  if (huntScore >= 5) recordGameClear(profile, 'kanji-hunt', 6);
-
   return (
     <Layout title="漢字アドベンチャー" subtitle="Cinnamorollと漢字の世界へ">
-      <section className="mb-6 rounded-3xl bg-sky-50 p-4">
-        <div className="mb-3 flex items-center gap-3">
-          <CinnamorollGuide className="h-14 w-14 animate-bob" />
-          <p className="font-semibold text-sky-600">筆画が少ない字から、だんだんレベルアップ！</p>
+      
+      <section className="mb-8 rounded-3xl glass-panel p-5 flex flex-col md:flex-row items-center gap-4 relative overflow-hidden border-2 border-blue-200">
+        <div className="absolute -left-4 -top-4 w-32 h-32 bg-blue-300 opacity-20 rounded-full blur-2xl"></div>
+        <CinnamorollGuide className="h-24 w-24 flex-shrink-0 animate-bob drop-shadow-md" />
+        <div className="chat-bubble left border border-blue-200 shadow-sm relative z-10 w-full md:w-auto">
+          <p className="font-black text-blue-600 text-lg mb-1">漢字の形をよく見てみよう！</p>
+          <p className="text-sm font-bold text-slate-600">
+            {profile === 'sister9' ? '妹ちゃんは画数が少ない漢字から練習するよ♪' : 'お姉ちゃんはちょっと難しい漢字にも挑戦！'}
+          </p>
         </div>
-        <div className="mb-3 flex flex-wrap gap-2">
+      </section>
+
+      {/* Kanji Gallery */}
+      <section className="mb-8">
+        <div className="flex flex-wrap gap-2 mb-6">
           {displayGroups.map((group) => (
             <button
               key={group.key}
               type="button"
               onClick={() => setSelectedGroup(group.key)}
-              aria-label={`${group.titleJa}グループを見る`}
-              className={`rounded-full px-3 py-2 text-sm font-bold ${
-                selectedGroup === group.key ? 'bg-sky-400 text-white' : 'bg-white text-sky-700'
+              className={`rounded-full px-4 py-2 text-sm font-black transition-all btn-3d flex items-center gap-2 ${
+                selectedGroup === group.key ? 'bg-blue-500 text-white scale-110 shadow-lg' : 'bg-white text-blue-600 hover:bg-blue-50'
               }`}
             >
+              <span className="text-lg">{icons[group.key] || '⭐'}</span>
               {group.titleJa}
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-6">
+        
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {displayGroups
             .find((g) => g.key === selectedGroup)
             ?.items.map((item) => (
-              <div key={`${selectedGroup}-${item.hanzi}`} className="rounded-2xl bg-white p-3 text-center">
-                <p className="text-2xl font-bold text-sky-600">{item.hanzi}</p>
-                <p className="text-xs text-slate-600">{item.pinyin}</p>
-                <p className="text-xs text-slate-500">{item.ja} / {item.strokes}画</p>
-                <DifficultyBadge level={item.difficulty} />
+              <div key={`${selectedGroup}-${item.hanzi}`} className="relative bg-[#faf7f2] border-4 border-[#5c4a3d] rounded-xl p-4 flex flex-col items-center justify-center card-shadow group hover:-translate-y-2 transition-transform">
+                {/* Rice paper texture overlay */}
+                <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiNmZmYiLz48cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjMDAwIi8+PC9zdmc+')] pointer-events-none"></div>
+                <p className="text-4xl md:text-5xl font-black text-[#2b221a] mb-2 font-serif tracking-widest group-hover:scale-110 transition-transform origin-center">{item.hanzi}</p>
+                <div className="w-full h-px bg-[#5c4a3d] opacity-20 mb-2"></div>
+                <p className="text-sm font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mb-1">{item.pinyin}</p>
+                <p className="text-xs font-black text-slate-600">{item.ja} / {item.strokes}画</p>
+                <div className="absolute top-2 right-2">
+                  <DifficultyBadge level={item.difficulty} />
+                </div>
               </div>
             ))}
         </div>
       </section>
 
-      <section className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FlipGameCard title="ゲーム3" front="漢字パズル" back="部首を組み合わせて正しい漢字を作る" completed={puzzleScore >= 6} />
-        <FlipGameCard title="ゲーム4" front="漢字かくれんぼ" back="似ている字の中から目標を見つける" completed={huntScore >= 5} />
-      </section>
-
-      <section className="mb-6 rounded-3xl bg-white p-4">
-        <h3 className="mb-2 text-lg font-bold text-sky-500">ゲーム3: 漢字パズル</h3>
-        <p className={`mb-2 text-sm font-semibold ${puzzleMsg.includes('正解') ? 'text-emerald-600 pop-in' : 'text-slate-600'}`}>{puzzleMsg}</p>
-        <p className="mb-2 text-sm font-bold text-yellow-600">スコア: {puzzleScore}</p>
-        <p className="mb-3 text-sm">お題: <span className="font-bold text-sky-700">{puzzle.hanzi}</span></p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-sky-50 p-3">
-            <p className="mb-2 text-sm font-bold text-sky-700">左パーツ</p>
-            <div className="flex flex-wrap gap-2">
-              {leftParts.map((part) => (
-                <button key={part} type="button" onClick={() => setPuzzleSelect((v) => ({ ...v, left: part }))} className="rounded-xl bg-white px-3 py-2 text-lg font-bold">
-                  {part}
-                </button>
-              ))}
-            </div>
+      {/* Game 3: Puzzle */}
+      <section className="mb-8 rounded-3xl bg-blue-50 border-4 border-blue-200 p-4 md:p-6 card-shadow">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-black text-blue-600">🎮 ゲーム3: 漢字パズル</h3>
+          <div className="bg-yellow-100 text-yellow-600 px-4 py-1 rounded-full font-black border-2 border-yellow-300">
+            スコア: {puzzleScore}
           </div>
-          <div className="rounded-2xl bg-sky-50 p-3">
-            <p className="mb-2 text-sm font-bold text-sky-700">右パーツ</p>
-            <div className="flex flex-wrap gap-2">
-              {rightParts.map((part) => (
-                <button key={part} type="button" onClick={() => setPuzzleSelect((v) => ({ ...v, right: part }))} className="rounded-xl bg-white px-3 py-2 text-lg font-bold">
-                  {part}
-                </button>
-              ))}
+        </div>
+        
+        <p className={`mb-4 inline-block px-4 py-2 rounded-full font-bold text-sm transition-all ${puzzleMsg.includes('正解') ? 'bg-emerald-100 text-emerald-600 border border-emerald-300 pop-in sparkle' : 'bg-white text-blue-500 border border-blue-200'}`}>
+          {puzzleMsg}
+        </p>
+
+        <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
+          
+          <div className="bg-white p-6 rounded-3xl border-4 border-blue-300 shadow-inner w-full md:w-1/3 text-center relative">
+            <p className="text-sm font-bold text-slate-500 mb-2">完成目標</p>
+            <p className="text-6xl font-black text-[#5c4a3d] font-serif">{puzzle.hanzi}</p>
+          </div>
+
+          <div className="w-full md:w-2/3 flex flex-col gap-4">
+            {/* Assembly Area */}
+            <div className="flex justify-center items-center gap-1 mb-2 h-24">
+              <div className={`w-20 h-24 flex items-center justify-center text-4xl font-serif rounded-l-2xl border-4 border-r-0 transition-all ${puzzleSelect.left ? 'bg-blue-400 text-white border-blue-500' : 'bg-white border-dashed border-blue-300 text-slate-300'}`}>
+                {puzzleSelect.left || '?'}
+              </div>
+              <div className={`w-20 h-24 flex items-center justify-center text-4xl font-serif rounded-r-2xl border-4 transition-all ${puzzleSelect.right ? 'bg-blue-500 text-white border-blue-600' : 'bg-white border-dashed border-blue-300 text-slate-300'}`}>
+                {puzzleSelect.right || '?'}
+              </div>
+              <button 
+                onClick={checkPuzzle}
+                disabled={!puzzleSelect.left || !puzzleSelect.right}
+                className="ml-4 w-16 h-16 rounded-full bg-yellow-400 text-white font-black text-xl btn-3d disabled:opacity-50 disabled:btn-3d flex items-center justify-center"
+              >
+                GO
+              </button>
+            </div>
+
+            {/* Parts Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white p-3 rounded-2xl border-2 border-blue-100">
+                <p className="text-xs font-bold text-blue-500 mb-2 text-center">左パーツ</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {leftParts.map(p => (
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, left: p }))} className="w-10 h-10 rounded-lg bg-blue-50 text-blue-700 font-black text-xl hover:bg-blue-200 btn-3d">{p}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-white p-3 rounded-2xl border-2 border-blue-100">
+                <p className="text-xs font-bold text-blue-500 mb-2 text-center">右パーツ</p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {rightParts.map(p => (
+                    <button key={p} onClick={() => setPuzzleSelect(v => ({ ...v, right: p }))} className="w-10 h-10 rounded-lg bg-blue-100 text-blue-800 font-black text-xl hover:bg-blue-300 btn-3d">{p}</button>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </div>
-        <button type="button" onClick={checkPuzzle} className="mt-3 rounded-2xl bg-sky-400 px-4 py-2 font-bold text-white">
-          できた！
-        </button>
       </section>
 
-      <section className="rounded-3xl bg-white p-4">
-        <h3 className="mb-2 text-lg font-bold text-violet-500">ゲーム4: 漢字かくれんぼ</h3>
-        <p className={`mb-2 text-sm font-semibold ${huntMsg.includes('正解') ? 'text-emerald-600 pop-in' : 'text-slate-600'}`}>{huntMsg}</p>
-        <p className="mb-2 text-sm font-bold text-yellow-600">スコア: {huntScore} / タイマー: {huntTime}s</p>
-        <p className="mb-3 text-sm">探す漢字: <span className="text-xl font-bold text-violet-600">{hunt.target}</span></p>
-        <div className="grid grid-cols-3 gap-2">
-          {hunt.options.map((item) => (
-            <button key={`${hunt.target}-${item}`} type="button" onClick={() => clickHunt(item)} className="rounded-2xl bg-violet-100 py-3 text-xl font-bold text-violet-700 hover:scale-[1.02]">
+      {/* Game 4: Hide and Seek */}
+      <section className="mb-8 rounded-3xl bg-violet-50 border-4 border-violet-200 p-4 md:p-6 card-shadow relative overflow-hidden">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-black text-violet-600">🎮 ゲーム4: 漢字かくれんぼ</h3>
+          <div className="bg-yellow-100 text-yellow-600 px-4 py-1 rounded-full font-black border-2 border-yellow-300">
+            スコア: {huntScore}/5
+          </div>
+        </div>
+        
+        <p className={`mb-4 inline-block px-4 py-2 rounded-full font-bold text-sm transition-all ${huntMsg.includes('見つけ') ? 'bg-emerald-100 text-emerald-600 border border-emerald-300 pop-in sparkle' : 'bg-white text-violet-500 border border-violet-200'}`}>
+          {huntMsg}
+        </p>
+        
+        <div className="mb-6 flex flex-col items-center justify-center relative">
+          <p className="text-sm font-bold text-slate-500 mb-2">この漢字を探して！</p>
+          <div className="relative">
+            <p className="text-6xl font-black text-violet-600 font-serif drop-shadow-md">{hunt.target}</p>
+            {showHint && (
+              <div className="absolute inset-0 bg-yellow-300/30 rounded-full animate-ping pointer-events-none"></div>
+            )}
+          </div>
+          <div className="mt-4 bg-slate-800 text-white px-4 py-1 rounded-full font-mono text-sm font-bold">
+            TIME: {huntTime}s
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-md mx-auto">
+          {hunt.options.map((item, i) => (
+            <button 
+              key={`${hunt.target}-${item}-${i}`} 
+              onClick={() => clickHunt(item)} 
+              className="bg-white rounded-2xl border-b-4 border-violet-300 text-3xl font-black font-serif text-slate-700 h-16 md:h-20 hover:bg-violet-100 hover:-translate-y-1 active:translate-y-1 active:border-b-0 transition-all"
+            >
               {item}
             </button>
           ))}
         </div>
       </section>
+
     </Layout>
   );
 }

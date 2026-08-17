@@ -40,9 +40,9 @@ export function saveProgress(profile: Profile, next: ProgressState) {
   localStorage.setItem(key(profile), JSON.stringify(next));
 }
 
-export function addStars(profile: Profile, stars: number) {
+export function addStars(profile: Profile, stars: number, hearts: number = 0) {
   const now = getProgress(profile);
-  const updated = { ...now, stars: now.stars + stars };
+  const updated = { ...now, stars: now.stars + stars, hearts: now.hearts + hearts };
   saveProgress(profile, updated);
 }
 

@@ -15,41 +15,69 @@ body {
     radial-gradient(at 100% 0%, hsla(271,81%,89%,1) 0, transparent 50%),
     radial-gradient(at 100% 100%, hsla(43,100%,88%,1) 0, transparent 50%);
   background-attachment: fixed;
+  position: relative;
+  min-height: 100vh;
+}
+
+body::before, body::after {
+  content: '⭐ ♡ 🎵';
+  position: fixed;
+  font-size: 24px;
+  color: rgba(255,255,255,0.6);
+  z-index: -1;
+  animation: float-particles 20s linear infinite;
+  white-space: pre;
+  letter-spacing: 50vw;
+  line-height: 50vh;
+  top: 0; left: -20vw;
+  pointer-events: none;
+}
+body::after {
+  content: '🎵 ⭐ ♡';
+  animation: float-particles 25s linear infinite reverse;
+  top: 10vh; left: 10vw;
+}
+
+@keyframes float-particles {
+  0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
 }
 
 .card-shadow {
   box-shadow: 
-    0 10px 20px -5px rgba(255, 183, 197, 0.4),
-    0 20px 40px -10px rgba(168, 85, 247, 0.2),
-    inset 0 1px 1px rgba(255, 255, 255, 0.8),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    0 15px 35px -5px rgba(255, 183, 197, 0.3),
+    0 8px 15px -3px rgba(168, 85, 247, 0.1),
+    inset 0 2px 3px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
 }
 
 .card-shadow:hover {
-  transform: translateY(-8px) scale(1.02) rotateX(4deg) rotateY(-2deg);
+  transform: translateY(-4px) scale(1.01);
   box-shadow: 
-    0 20px 30px -5px rgba(255, 183, 197, 0.5),
-    0 30px 50px -10px rgba(168, 85, 247, 0.3),
-    inset 0 1px 2px rgba(255, 255, 255, 0.9),
+    0 25px 40px -5px rgba(255, 183, 197, 0.4),
+    0 15px 25px -3px rgba(168, 85, 247, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 1),
     inset 0 -2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(255, 183, 197, 0.2);
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 40px 0 rgba(255, 183, 197, 0.25);
 }
 
 .btn-3d {
   position: relative;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 
     0 6px 0 -1px rgba(0,0,0,0.1),
-    0 6px 10px rgba(0,0,0,0.15),
-    inset 0 2px 2px rgba(255,255,255,0.5);
+    0 6px 12px rgba(0,0,0,0.15),
+    inset 0 2px 4px rgba(255,255,255,0.6);
 }
 
 .btn-3d:active {
@@ -57,41 +85,79 @@ body {
   box-shadow: 
     0 2px 0 -1px rgba(0,0,0,0.1),
     0 2px 4px rgba(0,0,0,0.1),
-    inset 0 1px 1px rgba(255,255,255,0.4);
+    inset 0 1px 2px rgba(255,255,255,0.5);
 }
 
 .text-3d {
   text-shadow: 
-    0 2px 0px rgba(255,183,197,0.8),
-    0 4px 4px rgba(255,183,197,0.4);
+    0 2px 1px rgba(255,183,197,0.9),
+    0 4px 6px rgba(255,183,197,0.5);
 }
 
 .progress-3d {
-  background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.05) 100%), var(--tw-bg-opacity, #FFB7C5);
-  box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), inset 0 -2px 4px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.05) 100%), var(--tw-bg-opacity, #FFB7C5);
+  box-shadow: inset 0 2px 4px rgba(255,255,255,0.7), inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 5px rgba(0,0,0,0.1);
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px 0px rgba(255, 183, 197, 0.5); }
+  50% { box-shadow: 0 0 25px 5px rgba(255, 183, 197, 0.8); }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s infinite ease-in-out;
+}
+
+@keyframes sparkle {
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+.sparkle::after {
+  content: '⭐';
+  position: absolute;
+  top: -10px; right: -10px;
+  animation: sparkle 0.6s forwards;
+  pointer-events: none;
+}
+
+@keyframes confetti-fall {
+  0% { transform: translateY(-100%) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti {
+  position: fixed;
+  top: 0; left: 50%;
+  width: 10px; height: 10px;
+  background: #FFB7C5;
+  animation: confetti-fall 3s linear forwards;
+  pointer-events: none;
+  z-index: 100;
+}
+
+@keyframes page-enter {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.page-transition {
+  animation: page-enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-8px) rotate(1deg); filter: drop-shadow(0 15px 10px rgba(0,0,0,0.1)); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
-
 .animate-bob {
-  animation: bob 3s ease-in-out infinite;
-  filter: drop-shadow(0 5px 5px rgba(0,0,0,0.15));
-  transition: transform 0.3s ease, filter 0.3s ease;
-}
-
-.animate-bob:hover {
-  transform: scale(1.1) rotate(5deg) translateY(-10px);
-  filter: drop-shadow(0 20px 15px rgba(0,0,0,0.2));
+  animation: bob 2.5s ease-in-out infinite;
 }
 
 @keyframes pop {
   0% { transform: scale(0.8); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
-
 .pop-in {
   animation: pop 220ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -101,7 +167,35 @@ body {
   25% { transform: translateX(-4px) rotate(-1deg); }
   75% { transform: translateX(4px) rotate(1deg); }
 }
-
 .shake-soft {
   animation: shake-soft 300ms ease-in-out;
+}
+
+.chat-bubble {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+.chat-bubble.left {
+  border-bottom-left-radius: 0.25rem;
+  background: white;
+}
+.chat-bubble.right {
+  border-bottom-right-radius: 0.25rem;
+  background: #ffe4e6; /* pink-100 */
+}
+
+/* 隐藏滚动条 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* 韵母花园花瓣状 */
+.flower-btn {
+  clip-path: polygon(50% 0%, 80% 20%, 100% 50%, 80% 80%, 50% 100%, 20% 80%, 0% 50%, 20% 20%);
 }
