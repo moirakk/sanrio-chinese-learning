@@ -53,7 +53,7 @@ export default function Layout({
             <div className="hidden sm:block text-left">
               <div className="text-xs font-bold text-slate-500 leading-none">プロフィール</div>
               <div className="text-sm font-black text-pink-600">
-                {profile === 'sister9' ? '妹 (9歳)' : '姉 (12歳)'}
+                {profile === 'sister9' ? 'May' : 'Yuna'}
               </div>
             </div>
           </button>

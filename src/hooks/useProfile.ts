@@ -6,7 +6,6 @@ export type DifficultyLevel = 1 | 2 | 3;
 export interface ProfileMeta {
   id: Profile;
   label: string;
-  age: number;
   routeName: string;
   description: string;
   defaultTimerSec: number;
@@ -16,8 +15,7 @@ export interface ProfileMeta {
 export const PROFILE_META: Record<Profile, ProfileMeta> = {
   sister9: {
     id: 'sister9',
-    label: '妹 (9歳)',
-    age: 9,
+    label: 'May',
     routeName: 'やさしいルート',
     description: '大きいボタン、やさしい問題、ゆっくりタイマー',
     defaultTimerSec: 45,
@@ -25,8 +23,7 @@ export const PROFILE_META: Record<Profile, ProfileMeta> = {
   },
   sister12: {
     id: 'sister12',
-    label: '姉 (12歳)',
-    age: 12,
+    label: 'Yuna',
     routeName: 'チャレンジルート',
     description: '問題多め、会話長め、タイマー短め',
     defaultTimerSec: 30,

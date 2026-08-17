@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+content = """import type { ReactElement } from 'react';
 
 type IconProps = {
   className?: string;
@@ -273,3 +273,6 @@ export function PochaccoGuide({ className = 'w-24 h-24' }: IconProps): ReactElem
   };
   return <PixelGrid grid={grid} colorMap={colorMap} className={className} label="Pochacco" />;
 }
+"""
+with open("src/assets/characters/characters.tsx", "w") as f:
+    f.write(content)
