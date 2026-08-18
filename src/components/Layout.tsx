@@ -1,11 +1,73 @@
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useProfile } from '../hooks/useProfile';
+import { getSpeechRate, setSpeechRate } from '../utils/speech';
 import {
   KittyGuide,
   MelodyGuide,
   KuromiGuide,
   PochaccoGuide
 } from '../assets/characters/characters';
+
+const RATES = [
+  { value: 0.5, label: '🐢', title: 'ゆっくり (0.5x)' },
+  { value: 0.8, label: '🐇', title: 'ふつう (0.8x)' },
+  { value: 1.0, label: '🐆', title: 'はやい (1.0x)' },
+] as const;
+
+function SpeechRatePicker({ compact = false }: { compact?: boolean }) {
+  const [rate, setRate] = useState(() => getSpeechRate());
+
+  const handleSet = (v: number) => {
+    setSpeechRate(v);
+    setRate(v);
+  };
+
+  if (compact) {
+    return (
+      <div className="flex items-center gap-1">
+        {RATES.map((r) => (
+          <button
+            key={r.value}
+            type="button"
+            onClick={() => handleSet(r.value)}
+            title={r.title}
+            className={`text-base rounded-full w-7 h-7 flex items-center justify-center border transition-all ${
+              rate === r.value
+                ? 'bg-pink-200 border-pink-400 scale-110'
+                : 'bg-white border-pink-100 hover:bg-pink-50'
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-[10px] font-bold text-slate-400 tracking-wide">速度</span>
+      <div className="flex flex-col gap-1">
+        {RATES.map((r) => (
+          <button
+            key={r.value}
+            type="button"
+            onClick={() => handleSet(r.value)}
+            title={r.title}
+            className={`text-lg rounded-xl w-10 h-10 flex items-center justify-center border transition-all ${
+              rate === r.value
+                ? 'bg-pink-200 border-pink-400 scale-110'
+                : 'bg-white border-pink-100 hover:bg-pink-50 hover:scale-105'
+            }`}
+          >
+            {r.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const nav = [
   { to: '/', label: 'ホーム', Icon: KittyGuide, color: 'text-pink-500' },
@@ -78,7 +140,8 @@ export default function Layout({
             );
           })}
         </div>
-        <div className="mt-auto pb-4">
+        <div className="mt-auto pb-4 flex flex-col items-center gap-3">
+           <SpeechRatePicker />
            <button 
              onClick={handleProfileSwitch}
              className="flex flex-col items-center gap-1 group hover:scale-105 transition-transform"
@@ -107,8 +170,9 @@ export default function Layout({
               <p className="text-sm font-bold text-slate-600 md:text-base mt-1">{subtitle}</p>
             </div>
             
-            {/* Mobile Profile Switcher */}
-            <div className="md:hidden">
+            {/* Mobile Profile Switcher + Speech Rate */}
+            <div className="md:hidden flex items-center gap-2">
+              <SpeechRatePicker compact />
               <ProfileButton />
             </div>
           </header>

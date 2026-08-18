@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
+import SpeakButton from '../components/SpeakButton';
 import { getUnit, units } from '../data/units';
 import { clearUnit, isUnitUnlocked, updateLearned } from '../utils/storage';
+import { speak } from '../utils/speech';
 import { useProfile } from '../hooks/useProfile';
 import type { ConversationItem, KanjiItem, PinyinItem, Question, QuestionKind } from '../types';
 import {
@@ -35,6 +37,39 @@ function toneOf(py: string): '1' | '2' | '3' | '4' {
   if (m[0] === '2') return '2';
   if (m[0] === '3') return '3';
   return '4';
+}
+
+/** Extract Chinese text from a game question to auto-read aloud */
+function getAutoReadText(q: Question): string {
+  switch (q.kind) {
+    case 'fill': {
+      // prompt: "Speaker: 你好 （___）\n(日本語)" — take first line, strip speaker label and blank
+      const firstLine = q.prompt.split('\n')[0];
+      const withoutSpeaker = firstLine.replace(/^[^:：]+[:：]\s*/, '');
+      return withoutSpeaker.replace(/（___）/g, '').trim();
+    }
+    case 'tone': {
+      // prompt: "我（wo）は何声？" — extract hanzi before （
+      const m = q.prompt.match(/^([\u4e00-\u9fff]+)/);
+      return m ? m[1] : '';
+    }
+    case 'puzzle': {
+      // prompt: "「我」の意味は？" — extract content inside 「」
+      const m = q.prompt.match(/「([\u4e00-\u9fff]+)」/);
+      return m ? m[1] : '';
+    }
+    case 'order':
+      // answer is the Chinese sentence to construct
+      return q.answer;
+    case 'match': {
+      // prompt: "我 の意味は？" or "a の読みは？" — read hanzi if present
+      const m = q.prompt.match(/^([\u4e00-\u9fff]+)/);
+      return m ? m[1] : '';
+    }
+    case 'hunt':
+    default:
+      return '';
+  }
 }
 
 function guideByKey(keyName: string) {
@@ -324,6 +359,15 @@ export default function UnitPage() {
     }
   }, [phase, baseGameKind, memoryDeck.length, pinyin.length, kanji.length]);
 
+  // Auto-read Chinese content when a new game question appears
+  useEffect(() => {
+    if (phase !== 'game' || !current) return;
+    const text = getAutoReadText(current);
+    if (text) {
+      speak(text, 'zh-CN');
+    }
+  }, [phase, index]);
+
   if (!unit) {
     return (
       <Layout title="ユニット不明" subtitle="ユニットが見つかりません">
@@ -362,7 +406,10 @@ export default function UnitPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {pinyin.map((item) => (
                 <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
-                  <p className="text-3xl font-black text-pink-600">{item.value}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-3xl font-black text-pink-600">{item.value}</p>
+                    <SpeakButton text={item.value} lang="zh-CN" />
+                  </div>
                   <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
                 </div>
               ))}
@@ -373,7 +420,10 @@ export default function UnitPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {kanji.map((item) => (
                 <div key={`${item.hanzi}-${item.pinyin}`} className="rounded-2xl bg-white border-2 border-blue-200 p-4 text-center btn-3d">
-                  <p className="text-4xl font-black text-slate-700">{item.hanzi}</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-4xl font-black text-slate-700">{item.hanzi}</p>
+                    <SpeakButton text={item.hanzi} lang="zh-CN" />
+                  </div>
                   <p className="text-xs font-bold text-slate-500">{item.ja}</p>
                 </div>
               ))}
@@ -385,8 +435,16 @@ export default function UnitPage() {
               {conversation.map((item, i) => (
                 <div key={item.id} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
                   <div className={`chat-bubble ${i % 2 === 0 ? 'left border border-yellow-200' : 'right border border-pink-200'} max-w-[90%]`}>
-                    <p className="text-xl font-black text-slate-700">{item.zh}</p>
-                    <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
+                    <div className="flex items-start gap-2">
+                      <div className="flex-1">
+                        <p className="text-xl font-black text-slate-700">{item.zh}</p>
+                        <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
+                      </div>
+                      <div className="flex flex-col gap-1 shrink-0 mt-1">
+                        <SpeakButton text={item.zh} lang="zh-CN" />
+                        <SpeakButton text={item.ja} lang="ja-JP" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -459,7 +517,12 @@ export default function UnitPage() {
               </div>
             ) : current ? (
               <div className="space-y-4">
-                <p className="text-xl font-black text-slate-700">{current.prompt}</p>
+                <div className="flex items-start gap-2">
+                  <p className="text-xl font-black text-slate-700 flex-1">{current.prompt}</p>
+                  {getAutoReadText(current) && (
+                    <SpeakButton text={getAutoReadText(current)} lang="zh-CN" className="mt-1" />
+                  )}
+                </div>
                 {(current.kind === 'hunt') && <p className="text-sm font-bold text-slate-500">残り時間: {timeLeft}秒</p>}
 
                 {current.kind === 'order' ? (
