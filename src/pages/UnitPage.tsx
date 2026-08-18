@@ -1,4 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+
+const PINYIN_CHAR_MAP: Record<string, string> = {
+  // 韵母（元音）
+  a: '啊', o: '喔', e: '鹅', i: '衣', u: '乌', ü: '鱼',
+  // 声母（辅音）
+  b: '玻', p: '坡', m: '摸', f: '佛', d: '得', t: '特',
+  n: '讷', l: '勒', g: '哥', k: '科', h: '喝', j: '基',
+  q: '七', x: '希', zh: '知', ch: '吃', sh: '诗', r: '日',
+  z: '资', c: '次', s: '思', y: '衣', w: '乌',
+  // 复韵母
+  ai: '爱', ei: '欸', ao: '奥', ou: '欧', an: '安', en: '恩',
+  ang: '昂', eng: '鞥', ong: '翁', er: '耳', ia: '呀', ie: '耶',
+  iu: '优', ian: '烟', in: '因', iang: '央', ing: '英', iong: '用',
+  ua: '蛙', uo: '窝', ui: '威', uan: '弯', un: '温', uang: '汪',
+  üe: '约', üan: '冤', ün: '晕',
+};
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SpeakButton from '../components/SpeakButton';
@@ -408,7 +424,7 @@ export default function UnitPage() {
                 <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-3xl font-black text-pink-600">{item.value}</p>
-                    {(() => { const m = item.examples?.match(/[\u4e00-\u9fff]+/); return m ? <SpeakButton text={m[0]} lang="zh-CN" /> : null; })()}
+                    <SpeakButton text={PINYIN_CHAR_MAP[item.value] ?? item.value} lang="zh-CN" />
                   </div>
                   <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
                 </div>
