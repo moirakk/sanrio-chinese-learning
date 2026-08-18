@@ -27,7 +27,7 @@ export default function TogetherPage() {
   const [p1Score, setP1Score] = useState(0);
   const [p2Score, setP2Score] = useState(0);
   
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<{ q: string, options: string[], answer: string }[]>([]);
   const [showFeedback, setShowFeedback] = useState<'correct' | 'wrong' | null>(null);
 
   const startGame = (unitId: number) => {

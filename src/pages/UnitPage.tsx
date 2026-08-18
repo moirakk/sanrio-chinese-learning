@@ -4,7 +4,7 @@ import Layout from '../components/Layout';
 import { getUnit, units } from '../data/units';
 import { clearUnit, isUnitUnlocked, updateLearned } from '../utils/storage';
 import { useProfile } from '../hooks/useProfile';
-import type { ConversationItem, KanjiItem, PinyinItem } from '../types';
+import type { ConversationItem, KanjiItem, PinyinItem, Question, QuestionKind } from '../types';
 import {
   CinnamorollGuide,
   KittyGuide,
@@ -14,8 +14,6 @@ import {
   PompompurinGuide,
 } from '../assets/characters/characters';
 
-type QuestionKind = 'tone' | 'puzzle' | 'hunt' | 'fill' | 'order' | 'match';
-type Question = { kind: QuestionKind; prompt: string; options: string[]; answer: string };
 type MemoryCard = { key: string; text: string; pair: string };
 
 function shuffle<T>(items: T[]): T[] {
@@ -126,7 +124,7 @@ function buildFillQuestions(conversation: ConversationItem[], total: number): Qu
     const hideIndex = Math.floor(Math.random() * parts.length);
     const hiddenWord = parts[hideIndex];
     const promptText = parts.map((p, idx) => idx === hideIndex ? '（___）' : p).join(' ');
-    const displayPrompt = `${(line as any).speaker ? (line as any).speaker + ': ' : ''}${promptText}
+    const displayPrompt = `${line.speaker ? line.speaker + ': ' : ''}${promptText}
 (${line.ja})`;
 
     const allWords = conversation.flatMap(c => c.zh.split(' '));
@@ -530,7 +528,7 @@ export default function UnitPage() {
   <div className="my-6 p-4 bg-white rounded-2xl border-2 border-yellow-200">
     <p className="font-bold text-slate-500 text-sm mb-2">学んだ漢字のおさらい</p>
     <div className="flex flex-wrap justify-center gap-3">
-      {unit.kanji.map((k: any) => <span key={k.hanzi} className="text-3xl font-black text-slate-700">{k.hanzi}</span>)}
+      {unit.kanji.map((k: KanjiItem) => <span key={k.hanzi} className="text-3xl font-black text-slate-700">{k.hanzi}</span>)}
     </div>
   </div>
 )}

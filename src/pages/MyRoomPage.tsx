@@ -90,7 +90,7 @@ export default function MyRoomPage() {
   };
 
   // --- Message Board Logic ---
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<{ sender: string, sticker: string, emoji: string, label: string, message: string, timestamp: number }[]>([]);
   const [composing, setComposing] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<number | null>(null);
   const [messageText, setMessageText] = useState('');
