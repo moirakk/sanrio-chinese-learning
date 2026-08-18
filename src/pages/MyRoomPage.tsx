@@ -89,54 +89,45 @@ export default function MyRoomPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  // --- Stickers Logic ---
-  const [stickers, setStickers] = useState<any[]>([]);
+  // --- Message Board Logic ---
+  const [messages, setMessages] = useState<any[]>([]);
   const [composing, setComposing] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<number | null>(null);
-  const [message, setMessage] = useState('');
-  const [viewingInbox, setViewingInbox] = useState(false);
+  const [messageText, setMessageText] = useState('');
+  const [viewingBoard, setViewingBoard] = useState(false);
   const [sentFeedback, setSentFeedback] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem(`sanrio_stickers_${profile}`);
+    const data = localStorage.getItem('sanrio_messageboard');
     if (data) {
-      setStickers(JSON.parse(data));
+      setMessages(JSON.parse(data));
     }
-  }, [profile]);
+  }, []);
 
-  const unreadCount = stickers.filter(s => !s.read).length;
-
-  const handleSendSticker = () => {
+  const handlePostMessage = () => {
     if (selectedSticker === null) return;
-    const targetProfile = profile === 'sister9' ? 'sister12' : 'sister9';
-    const existingStr = localStorage.getItem(`sanrio_stickers_${targetProfile}`);
+    
+    const existingStr = localStorage.getItem('sanrio_messageboard');
     const existing = existingStr ? JSON.parse(existingStr) : [];
     
-    const newSticker = {
-      from: profile,
+    const newMessage = {
+      sender: profile === 'sister9' ? 'May' : 'Yuna',
+      sticker: stickersOptions[selectedSticker].id,
       emoji: stickersOptions[selectedSticker].emoji,
       label: stickersOptions[selectedSticker].label,
-      message,
-      timestamp: Date.now(),
-      read: false
+      message: messageText,
+      timestamp: Date.now()
     };
     
-    localStorage.setItem(`sanrio_stickers_${targetProfile}`, JSON.stringify([newSticker, ...existing].slice(0, 10)));
+    const updatedMessages = [newMessage, ...existing].slice(0, 20);
+    localStorage.setItem('sanrio_messageboard', JSON.stringify(updatedMessages));
+    setMessages(updatedMessages);
     
     setComposing(false);
     setSelectedSticker(null);
-    setMessage('');
+    setMessageText('');
     setSentFeedback(true);
     setTimeout(() => setSentFeedback(false), 3000);
-  };
-
-  const handleOpenInbox = () => {
-    setViewingInbox(true);
-    if (unreadCount > 0) {
-      const updated = stickers.map(s => ({...s, read: true}));
-      setStickers(updated);
-      localStorage.setItem(`sanrio_stickers_${profile}`, JSON.stringify(updated));
-    }
   };
 
   return (
@@ -253,20 +244,18 @@ export default function MyRoomPage() {
           </div>
         </section>
 
-        {/* Stickers Area */}
+        {/* Message Board Area */}
         <section className="rounded-3xl bg-rose-50 border-2 border-rose-200 p-6 card-shadow">
           <h3 className="text-xl font-black text-rose-600 mb-4 flex justify-between items-center">
-            <span>おてがみ</span>
-            {unreadCount > 0 && <span className="bg-rose-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">新しいおてがみが{unreadCount}通届いてるよ！</span>}
+            <span>けいじばん（掲示板）</span>
           </h3>
           <div className="flex gap-4">
-            <button onClick={() => {setComposing(true); setViewingInbox(false);}} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
-              💌 おてがみをおくる
-              {sentFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">おくったよ！💌</span>}
+            <button onClick={() => {setComposing(true); setViewingBoard(false);}} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
+              💌 けいじばんにかく
+              {sentFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">かきこんだよ！💌</span>}
             </button>
-            <button onClick={handleOpenInbox} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
-              📫 ポストをみる
-              {unreadCount > 0 && <span className="absolute -top-2 -right-2 w-4 h-4 bg-rose-500 rounded-full border-2 border-white"></span>}
+            <button onClick={() => setViewingBoard(true)} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
+              📫 けいじばんをみる
             </button>
           </div>
         </section>
@@ -275,7 +264,7 @@ export default function MyRoomPage() {
       {composing && (
         <section className="bg-white rounded-3xl p-6 card-shadow border-4 border-rose-200 mb-8 relative">
           <button onClick={() => setComposing(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-          <h4 className="text-lg font-black text-rose-500 mb-4">だれにおくる？</h4>
+          <h4 className="text-lg font-black text-rose-500 mb-4">なにをかく？</h4>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mb-4">
             {stickersOptions.map((s, i) => {
               const Guide = s.Guide;
@@ -295,39 +284,39 @@ export default function MyRoomPage() {
           <div className="flex gap-4">
             <input 
               type="text" 
-              value={message}
-              onChange={e => setMessage(e.target.value.slice(0, 20))}
+              value={messageText}
+              onChange={e => setMessageText(e.target.value.slice(0, 20))}
               placeholder="メッセージを書いてね（20文字まで）"
               className="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-2 font-bold focus:outline-none focus:border-rose-400"
             />
             <button 
-              onClick={handleSendSticker}
+              onClick={handlePostMessage}
               disabled={selectedSticker === null}
               className="bg-rose-500 text-white font-black px-6 py-2 rounded-xl btn-3d disabled:opacity-50"
             >
-              おくる！
+              かきこむ！
             </button>
           </div>
         </section>
       )}
 
-      {viewingInbox && (
+      {viewingBoard && (
         <section className="bg-white rounded-3xl p-6 card-shadow border-4 border-rose-200 mb-8 relative">
-          <button onClick={() => setViewingInbox(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
-          <h4 className="text-lg font-black text-rose-500 mb-4">ポストのなかみ</h4>
+          <button onClick={() => setViewingBoard(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
+          <h4 className="text-lg font-black text-rose-500 mb-4">けいじばん</h4>
           
-          {stickers.length === 0 ? (
-            <p className="text-slate-500 font-bold text-center py-4">まだおてがみはないよ</p>
+          {messages.length === 0 ? (
+            <p className="text-slate-500 font-bold text-center py-4">まだかきこみはないよ</p>
           ) : (
             <div className="flex flex-col gap-4">
-              {stickers.map((s, i) => (
+              {messages.map((m, i) => (
                 <div key={i} className="flex gap-4 bg-rose-50 border-2 border-rose-200 rounded-2xl p-4 animate-in slide-in-from-bottom-2">
-                  <div className="text-4xl">{s.emoji}</div>
+                  <div className="text-4xl">{m.emoji}</div>
                   <div>
-                    <div className="font-black text-rose-600 mb-1">{s.label}</div>
-                    <div className="text-slate-600 font-bold text-sm bg-white p-2 rounded-xl border border-rose-100">{s.message || '（メッセージなし）'}</div>
+                    <div className="font-black text-rose-600 mb-1">{m.label}</div>
+                    <div className="text-slate-600 font-bold text-sm bg-white p-2 rounded-xl border border-rose-100">{m.message || '（メッセージなし）'}</div>
                     <div className="text-xs text-slate-400 font-bold mt-1">
-                      {s.from === 'sister9' ? 'May' : 'Yuna'} から • {new Date(s.timestamp).toLocaleDateString()}
+                      {m.sender} から • {new Date(m.timestamp).toLocaleString()}
                     </div>
                   </div>
                 </div>
