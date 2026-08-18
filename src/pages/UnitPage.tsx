@@ -408,7 +408,7 @@ export default function UnitPage() {
                 <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
                   <div className="flex items-center justify-center gap-2">
                     <p className="text-3xl font-black text-pink-600">{item.value}</p>
-                    <SpeakButton text={item.value} lang="zh-CN" />
+                    {(() => { const m = item.examples?.match(/[\u4e00-\u9fff]+/); return m ? <SpeakButton text={m[0]} lang="zh-CN" /> : null; })()}
                   </div>
                   <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
                 </div>
