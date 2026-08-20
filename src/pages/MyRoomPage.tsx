@@ -4,6 +4,8 @@ import { useProfile } from '../hooks/useProfile';
 import { getProgress } from '../utils/storage';
 import { useMemo, useState, useRef, useEffect } from 'react';
 
+type RoomTab = 'growth' | 'words' | 'data' | 'board';
+
 const allCharacters = [
   { name: 'Kitty風', Guide: KittyGuide, threshold: 0 },
   { name: 'Melody風', Guide: MelodyGuide, threshold: 10 },
@@ -33,6 +35,7 @@ const stickersOptions = [
 export default function MyRoomPage() {
   const { profile, meta } = useProfile();
   const progress = getProgress(profile);
+  const [activeTab, setActiveTab] = useState<RoomTab>('growth');
   
   const quote = useMemo(() => dailyQuotes[new Date().getDay() % dailyQuotes.length], []);
 
@@ -146,7 +149,27 @@ export default function MyRoomPage() {
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="mb-6 grid grid-cols-4 gap-2 rounded-[1.5rem] border border-white/80 bg-white/80 p-2 shadow-sm">
+        {[
+          { id: 'growth', label: '成長' },
+          { id: 'words', label: 'コレクション' },
+          { id: 'data', label: 'データ' },
+          { id: 'board', label: 'けいじばん' },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as RoomTab)}
+            className={`rounded-2xl px-3 py-3 text-sm font-black transition-all ${
+              activeTab === tab.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'growth' && <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* Circular Dashboard */}
         <section className="col-span-1 bg-white rounded-3xl p-6 card-shadow border-4 border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
@@ -230,9 +253,9 @@ export default function MyRoomPage() {
             </div>
           </div>
         </section>
-      </div>
+      </div>}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {activeTab === 'data' && <div className="grid grid-cols-1 gap-6 mb-8">
         {/* Save/Load Area */}
         <section className="rounded-3xl bg-orange-50 border-2 border-orange-200 p-6 card-shadow">
           <h3 className="text-xl font-black text-orange-600 mb-1">セーブ / ロード</h3>
@@ -248,25 +271,9 @@ export default function MyRoomPage() {
             </button>
           </div>
         </section>
+      </div>}
 
-        {/* Message Board Area */}
-        <section className="rounded-3xl bg-rose-50 border-2 border-rose-200 p-6 card-shadow">
-          <h3 className="text-xl font-black text-rose-600 mb-4 flex justify-between items-center">
-            <span>けいじばん（掲示板）</span>
-          </h3>
-          <div className="flex gap-4">
-            <button onClick={() => {setComposing(true); setViewingBoard(false);}} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
-              💌 けいじばんにかく
-              {sentFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">かきこんだよ！💌</span>}
-            </button>
-            <button onClick={() => setViewingBoard(true)} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
-              📫 けいじばんをみる
-            </button>
-          </div>
-        </section>
-      </div>
-
-      {composing && (
+      {activeTab === 'board' && composing && (
         <section className="bg-white rounded-3xl p-6 card-shadow border-4 border-rose-200 mb-8 relative">
           <button onClick={() => setComposing(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
           <h4 className="text-lg font-black text-rose-500 mb-4">なにをかく？</h4>
@@ -305,7 +312,7 @@ export default function MyRoomPage() {
         </section>
       )}
 
-      {viewingBoard && (
+      {activeTab === 'board' && viewingBoard && (
         <section className="bg-white rounded-3xl p-6 card-shadow border-4 border-rose-200 mb-8 relative">
           <button onClick={() => setViewingBoard(false)} className="absolute top-4 right-4 text-slate-400 font-bold">✕</button>
           <h4 className="text-lg font-black text-rose-500 mb-4">けいじばん</h4>
@@ -331,8 +338,22 @@ export default function MyRoomPage() {
         </section>
       )}
 
-      {/* Character Collection */}
-      <section className="bg-indigo-50 rounded-3xl p-6 card-shadow border-4 border-indigo-200">
+      {activeTab === 'board' && !composing && !viewingBoard && (
+        <section className="rounded-3xl bg-rose-50 border-2 border-rose-200 p-6 card-shadow mb-8">
+          <h3 className="text-xl font-black text-rose-600 mb-4">けいじばん</h3>
+          <div className="flex gap-4">
+            <button onClick={() => {setComposing(true); setViewingBoard(false);}} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
+              💌 かく
+              {sentFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">かきこんだよ！💌</span>}
+            </button>
+            <button onClick={() => setViewingBoard(true)} className="flex-1 bg-white border-2 border-rose-300 rounded-2xl py-3 font-bold text-rose-500 btn-3d relative">
+              📫 みる
+            </button>
+          </div>
+        </section>
+      )}
+
+      {activeTab === 'words' && <section className="bg-indigo-50 rounded-3xl p-6 card-shadow border-4 border-indigo-200">
         <h3 className="mb-6 text-xl font-black text-indigo-600 flex items-center gap-2">
           <span>🎁</span> キャラクターコレクション
         </h3>
@@ -362,7 +383,7 @@ export default function MyRoomPage() {
             );
           })}
         </div>
-      </section>
+      </section>}
 
     </Layout>
   );

@@ -18,6 +18,7 @@ const PINYIN_CHAR_MAP: Record<string, string> = {
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SpeakButton from '../components/SpeakButton';
+import ShadowPractice from '../components/ShadowPractice';
 import { getUnit, units } from '../data/units';
 import { clearUnit, isUnitUnlocked, recordReviewMiss, updateLearned } from '../utils/storage';
 import { speak } from '../utils/speech';
@@ -464,6 +465,7 @@ export default function UnitPage() {
                       <div className="flex-1">
                         <p className="text-xl font-black text-slate-700">{item.zh}</p>
                         <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
+                        <ShadowPractice text={item.zh} />
                       </div>
                       <div className="flex flex-col gap-1 shrink-0 mt-1">
                         <SpeakButton text={item.zh} lang="zh-CN" />

@@ -17,3 +17,5 @@ All notable changes to this family learning app will be documented here.
 - Added clearer May/Yuna learning spaces and a parent progress page.
 - Added a real review queue for missed questions.
 - Upgraded unit completion into a clearer learning summary.
+- Added shadowing practice controls to conversation lines.
+- Split My Room into focused tabs for growth, data, board, and collection.
