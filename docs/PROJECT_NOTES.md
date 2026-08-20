@@ -18,6 +18,7 @@ The app is fully client-side:
 - React renders all screens.
 - Lesson data lives in TypeScript files under `src/data`.
 - Progress, messages, and speech speed live in browser `localStorage`.
+- Missed questions are stored in each learner's local progress as a review queue.
 - Browser speech synthesis handles pronunciation playback.
 - Hash-based routing keeps static hosting simple.
 
@@ -56,6 +57,8 @@ Before sharing a new version with the children:
 - "My Room" shows learned kanji and phrases after clearing a unit.
 - Save and load work with a downloaded JSON file.
 - Two-player challenge starts and reaches a result screen.
+- Missed questions appear on the review page and are removed after a correct review answer.
+- The parent page shows May and Yuna separately.
 - Speech buttons play Mandarin on the target device.
 
 ## Known Constraints

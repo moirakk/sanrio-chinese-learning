@@ -27,5 +27,7 @@ Use this checklist when preparing a meaningful update.
 - Open `https://yunawithmay.site`.
 - Check the home page.
 - Check one lesson flow.
+- Check the review flow after answering a question incorrectly.
+- Check the parent page.
 - Check "My Room".
 - Check speech playback on the children's usual device.

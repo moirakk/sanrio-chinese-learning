@@ -9,8 +9,11 @@ A private, family-focused Chinese learning web app for two children. It uses a c
 - 15 lesson units across three chapters
 - Pinyin, hanzi, and short conversation practice
 - Unit unlock progression for two profiles: May and Yuna
+- Clear May/Yuna learning spaces with separate local progress
+- Missed-question review queue for targeted practice
 - Mini games: memory, tone, puzzle, hunt, fill-in-the-blank, and word order
 - Two-player challenge mode
+- Parent progress page for checking both learners at once
 - "My Room" progress dashboard, learned words, message board, and save/load
 - Browser-based Mandarin and Japanese speech playback
 
@@ -94,6 +97,8 @@ Important local storage keys:
 - `sanrio_progress_sister12`
 - `sanrio_messageboard`
 - `sanrio_speech_rate`
+
+Each profile stores its own cleared units, stars, streak count, learned words, and review queue inside its profile-specific progress key.
 
 The "My Room" page includes JSON save/load controls so progress can be backed up manually.
 
