@@ -32,7 +32,7 @@ export default function ReviewPage() {
           <section className="rounded-[2rem] border border-emerald-100 bg-white/85 p-8 text-center shadow-[0_22px_55px_rgba(15,23,42,0.10)]">
             <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-emerald-500" />
             <h2 className="text-2xl font-black text-slate-800">今のおさらいは完了！</h2>
-            <p className="mt-2 font-bold text-slate-500">また間違えた問題が出たら、ここに集まります。</p>
+            <p className="mt-2 font-bold text-slate-500">今日のおさらいはありません。明日また出る問題があるかもしれません。</p>
             <Link to="/" className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 font-black text-white">
               <Home className="h-5 w-5" />
               ホームへ
@@ -85,7 +85,7 @@ export default function ReviewPage() {
               <span>{items.length}問のおさらい</span>
               <span className="inline-flex items-center gap-1">
                 <RotateCcw className="h-4 w-4" />
-                正解したら復習から外れます
+                正解したら次の日にまた確認します
               </span>
             </div>
           </section>

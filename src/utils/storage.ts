@@ -22,7 +22,9 @@ export type ReviewItem = {
   answer: string;
   options: string[];
   misses: number;
+  correctStreak?: number;
   lastMissedAt: number;
+  nextReviewAt?: number;
   masteredAt?: number;
 };
 
@@ -114,7 +116,9 @@ export function recordReviewMiss(profile: Profile, item: Omit<ReviewItem, 'id' |
     ...item,
     id,
     misses: (existing?.misses ?? 0) + 1,
+    correctStreak: 0,
     lastMissedAt: Date.now(),
+    nextReviewAt: Date.now(),
     masteredAt: undefined,
   };
   const reviewItems = [nextItem, ...now.reviewItems.filter((x) => x.id !== id)].slice(0, 40);
@@ -123,17 +127,33 @@ export function recordReviewMiss(profile: Profile, item: Omit<ReviewItem, 'id' |
 
 export function markReviewMastered(profile: Profile, id: string) {
   const now = getProgress(profile);
-  const reviewItems = now.reviewItems.map((item) =>
-    item.id === id ? { ...item, masteredAt: Date.now() } : item,
-  );
+  const reviewItems = now.reviewItems.map((item) => {
+    if (item.id !== id) return item;
+    const correctStreak = (item.correctStreak ?? 0) + 1;
+    const delayDays = correctStreak === 1 ? 1 : correctStreak === 2 ? 3 : 7;
+    return {
+      ...item,
+      correctStreak,
+      masteredAt: correctStreak >= 3 ? Date.now() : undefined,
+      nextReviewAt: Date.now() + delayDays * 24 * 60 * 60 * 1000,
+    };
+  });
   saveProgress(profile, { ...now, reviewItems });
 }
 
 export function getActiveReviewItems(profile: Profile) {
+  const now = Date.now();
+  return getProgress(profile)
+    .reviewItems
+    .filter((item) => !item.masteredAt && (item.nextReviewAt ?? 0) <= now)
+    .sort((a, b) => b.misses - a.misses || (a.nextReviewAt ?? 0) - (b.nextReviewAt ?? 0));
+}
+
+export function getScheduledReviewItems(profile: Profile) {
   return getProgress(profile)
     .reviewItems
     .filter((item) => !item.masteredAt)
-    .sort((a, b) => b.misses - a.misses || b.lastMissedAt - a.lastMissedAt);
+    .sort((a, b) => (a.nextReviewAt ?? 0) - (b.nextReviewAt ?? 0));
 }
 
 export function isUnitUnlocked(profile: Profile, unitId: number) {

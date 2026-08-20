@@ -3,7 +3,7 @@ import { BookOpen, CalendarDays, Heart, Trophy } from 'lucide-react';
 import Layout from '../components/Layout';
 import { PROFILE_META, type Profile } from '../hooks/useProfile';
 import { units } from '../data/units';
-import { getActiveReviewItems, getProgress } from '../utils/storage';
+import { getActiveReviewItems, getProgress, getScheduledReviewItems } from '../utils/storage';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
 
 const profiles: Profile[] = ['sister9', 'sister12'];
@@ -22,6 +22,7 @@ export default function ParentPage() {
             const meta = PROFILE_META[profile];
             const progress = getProgress(profile);
             const reviewItems = getActiveReviewItems(profile);
+            const scheduledItems = getScheduledReviewItems(profile);
             const completionPct = Math.round((progress.clearedUnits.length / units.length) * 100);
             const nextUnit = nextUnitFor(profile);
             const Guide = profile === 'sister9' ? MelodyGuide : KuromiGuide;
@@ -76,6 +77,16 @@ export default function ParentPage() {
                   <Link to={`/unit/${nextUnit.id}`} className={`mt-3 inline-flex rounded-xl px-4 py-2 text-sm font-black text-white ${tone === 'rose' ? 'bg-rose-500' : 'bg-violet-500'}`}>
                     開く
                   </Link>
+                </div>
+
+                <div className={`mt-4 rounded-2xl p-4 ${reviewItems.length > 0 ? 'bg-amber-50' : 'bg-emerald-50'}`}>
+                  <p className={`text-xs font-black ${reviewItems.length > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>今日のおすすめ</p>
+                  <p className="mt-1 text-sm font-bold text-slate-600">
+                    {reviewItems.length > 0
+                      ? `まず復習を ${Math.min(reviewItems.length, 5)}問。`
+                      : `次はユニット ${nextUnit.id} を少し進める。`}
+                  </p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">予約中の復習：{scheduledItems.length}問</p>
                 </div>
               </article>
             );

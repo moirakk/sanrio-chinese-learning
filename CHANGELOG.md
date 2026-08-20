@@ -19,3 +19,6 @@ All notable changes to this family learning app will be documented here.
 - Upgraded unit completion into a clearer learning summary.
 - Added shadowing practice controls to conversation lines.
 - Split My Room into focused tabs for growth, data, board, and collection.
+- Changed unit learning into step-by-step pinyin, hanzi, and conversation sections.
+- Upgraded missed-question review into a spaced review schedule.
+- Added parent page recommendations for review and next units.

@@ -34,6 +34,7 @@ import {
 } from '../assets/characters/characters';
 
 type MemoryCard = { key: string; text: string; pair: string };
+type LearnStep = 'pinyin' | 'kanji' | 'conversation';
 
 function shuffle<T>(items: T[]): T[] {
   return [...items].sort(() => Math.random() - 0.5);
@@ -245,6 +246,7 @@ export default function UnitPage() {
   const gameRef = useRef<HTMLDivElement | null>(null);
 
   const [phase, setPhase] = useState<'learn' | 'game' | 'result'>('learn');
+  const [learnStep, setLearnStep] = useState<LearnStep>('pinyin');
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [msg, setMsg] = useState('準備OK！');
@@ -426,8 +428,29 @@ export default function UnitPage() {
           </div>
         </section>
 
+        {phase === 'learn' && (
+          <div className="grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/80 bg-white/80 p-2 shadow-sm">
+            {[
+              { id: 'pinyin', label: '拼音' },
+              { id: 'kanji', label: '漢字' },
+              { id: 'conversation', label: '会話' },
+            ].map((step) => (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => setLearnStep(step.id as LearnStep)}
+                className={`rounded-2xl px-3 py-3 text-sm font-black transition-all ${
+                  learnStep === step.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'
+                }`}
+              >
+                {step.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <section className="space-y-6">
-          <section className="rounded-[2rem] bg-white/85 border border-rose-100 p-4 md:p-6 card-shadow">
+          {phase === 'learn' && learnStep === 'pinyin' && <section className="rounded-[2rem] bg-white/85 border border-rose-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-pink-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-pink-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-pink-200">一緒に発音してみよう！</div></div><h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {pinyin.map((item) => (
@@ -440,8 +463,8 @@ export default function UnitPage() {
                 </div>
               ))}
             </div>
-          </section>
-          <section className="rounded-[2rem] bg-white/85 border border-sky-100 p-4 md:p-6 card-shadow">
+          </section>}
+          {phase === 'learn' && learnStep === 'kanji' && <section className="rounded-[2rem] bg-white/85 border border-sky-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-blue-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-blue-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-blue-200">新しい漢字を覚えよう！</div></div><h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {kanji.map((item) => (
@@ -454,8 +477,8 @@ export default function UnitPage() {
                 </div>
               ))}
             </div>
-          </section>
-          <section className="rounded-[2rem] bg-white/85 border border-amber-100 p-4 md:p-6 card-shadow">
+          </section>}
+          {phase === 'learn' && learnStep === 'conversation' && <section className="rounded-[2rem] bg-white/85 border border-amber-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-yellow-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-yellow-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-yellow-200">実際に使ってみよう！</div></div><h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
             <div className="space-y-3">
               {conversation.map((item, i) => (
@@ -476,9 +499,19 @@ export default function UnitPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </section>}
           {phase === 'learn' && (
-            <div className="text-center">
+            <div className="flex flex-wrap justify-center gap-3">
+              {learnStep !== 'pinyin' ? (
+                <button onClick={() => setLearnStep(learnStep === 'conversation' ? 'kanji' : 'pinyin')} className="rounded-full px-6 py-3 bg-white text-slate-600 font-black border border-slate-100 shadow-sm">
+                  もどる
+                </button>
+              ) : null}
+              {learnStep !== 'conversation' ? (
+                <button onClick={() => setLearnStep(learnStep === 'pinyin' ? 'kanji' : 'conversation')} className="rounded-full px-6 py-3 bg-slate-900 text-white font-black shadow-lg">
+                  次へ
+                </button>
+              ) : null}
               <button
                 onClick={() => {
                   setPhase('game');
