@@ -29,7 +29,7 @@ function chapterName(chapter: number) {
 }
 
 export default function Home() {
-  const { profile } = useProfile();
+  const { profile, setProfile } = useProfile();
   const progress = getProgress(profile);
   const clearedCount = progress.clearedUnits.length;
   const nextUnit = units.find((u) => isUnitUnlocked(profile, u.id) && !progress.clearedUnits.includes(u.id)) ?? units[0];
@@ -44,6 +44,41 @@ export default function Home() {
   return (
     <Layout title="中国語ランド" subtitle={`${profileName}の今日の練習`}>
       <div className="space-y-7">
+        <section className="grid gap-4 md:grid-cols-2">
+          <button
+            type="button"
+            onClick={() => setProfile('sister9')}
+            className={`flex items-center gap-4 rounded-[1.75rem] border-2 p-4 text-left shadow-[0_16px_40px_rgba(244,114,182,0.12)] transition-transform hover:-translate-y-0.5 ${
+              profile === 'sister9' ? 'border-rose-300 bg-rose-50 ring-4 ring-rose-100' : 'border-white bg-white/70'
+            }`}
+          >
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-white shadow-inner">
+              <MelodyGuide className="h-16 w-16" />
+            </div>
+            <div>
+              <p className="text-xl font-black text-slate-800">May のおへや</p>
+              <p className="text-sm font-bold text-slate-500">やさしいルート ・ {getProgress('sister9').clearedUnits.length}ユニット</p>
+              <p className="mt-1 text-xs font-black text-rose-500">{profile === 'sister9' ? 'いま使っています' : 'ここから始める'}</p>
+            </div>
+          </button>
+          <button
+            type="button"
+            onClick={() => setProfile('sister12')}
+            className={`flex items-center gap-4 rounded-[1.75rem] border-2 p-4 text-left shadow-[0_16px_40px_rgba(139,92,246,0.12)] transition-transform hover:-translate-y-0.5 ${
+              profile === 'sister12' ? 'border-violet-300 bg-violet-50 ring-4 ring-violet-100' : 'border-white bg-white/70'
+            }`}
+          >
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-[1.5rem] bg-white shadow-inner">
+              <KuromiGuide className="h-16 w-16" />
+            </div>
+            <div>
+              <p className="text-xl font-black text-slate-800">Yuna のおへや</p>
+              <p className="text-sm font-bold text-slate-500">チャレンジルート ・ {getProgress('sister12').clearedUnits.length}ユニット</p>
+              <p className="mt-1 text-xs font-black text-violet-500">{profile === 'sister12' ? 'いま使っています' : 'ここから始める'}</p>
+            </div>
+          </button>
+        </section>
+
         <section className="relative overflow-hidden rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-[0_24px_60px_rgba(244,114,182,0.20)] md:p-7">
           <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-rose-300 via-sky-300 to-emerald-300" />
           <div className="grid gap-6 md:grid-cols-[1.15fr_0.85fr] md:items-center">

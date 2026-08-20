@@ -14,3 +14,4 @@ All notable changes to this family learning app will be documented here.
 - Redesigned the home page around a daily practice flow.
 - Added streak tracking after successful unit clears.
 - Refined the global visual style for a cleaner, softer learning interface.
+- Added clearer May/Yuna learning spaces and a parent progress page.

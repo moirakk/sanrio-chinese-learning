@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ClipboardList } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 import { getSpeechRate, setSpeechRate } from '../utils/speech';
 import {
@@ -73,6 +74,7 @@ const nav = [
   { to: '/', label: 'ホーム', Icon: KittyGuide, color: 'text-pink-500' },
   { to: '/unit/1', label: 'ユニット', Icon: MelodyGuide, color: 'text-purple-500' },
   { to: '/myroom', label: 'マイルーム', Icon: PochaccoGuide, color: 'text-emerald-600' },
+  { to: '/parent', label: '保護者', Icon: ClipboardList, color: 'text-slate-600' },
 ];
 
 export default function Layout({
@@ -85,7 +87,10 @@ export default function Layout({
   children: React.ReactNode;
 }) {
   const location = useLocation();
-  const { profile, setProfile } = useProfile();
+  const { profile, setProfile, meta } = useProfile();
+  const activeTone = meta.accent === 'rose'
+    ? 'border-rose-200 bg-rose-50 text-rose-600'
+    : 'border-violet-200 bg-violet-50 text-violet-600';
 
   const handleProfileSwitch = () => {
     setProfile(profile === 'sister9' ? 'sister12' : 'sister9');
@@ -94,7 +99,7 @@ export default function Layout({
   const ProfileButton = () => (
     <button 
       onClick={handleProfileSwitch}
-      className="flex items-center gap-2 rounded-full border border-rose-100 bg-white px-2 py-1.5 shadow-sm transition-colors hover:border-rose-300 group"
+      className={`flex items-center gap-2 rounded-full border px-2 py-1.5 shadow-sm transition-colors group ${activeTone}`}
       aria-label="プロフィール切り替え"
     >
       <div className="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border border-rose-100 group-hover:scale-110 transition-transform pop-in">
@@ -106,7 +111,7 @@ export default function Layout({
       </div>
       <div className="hidden sm:block text-left">
         <div className="text-[10px] font-bold text-slate-500 leading-none">プロフィール</div>
-        <div className="text-sm font-black text-pink-600 mt-0.5">
+        <div className={`text-sm font-black mt-0.5 ${meta.accent === 'rose' ? 'text-rose-600' : 'text-violet-600'}`}>
           {profile === 'sister9' ? 'May' : 'Yuna'}
         </div>
       </div>
@@ -154,7 +159,7 @@ export default function Layout({
                   <KuromiGuide className="w-10 h-10" />
                 )}
               </div>
-              <div className="text-xs font-black text-pink-600">
+              <div className={`text-xs font-black ${meta.accent === 'rose' ? 'text-rose-600' : 'text-violet-600'}`}>
                 {profile === 'sister9' ? 'May' : 'Yuna'}
               </div>
            </button>
@@ -166,6 +171,9 @@ export default function Layout({
         <div className="mx-auto max-w-6xl p-4 md:p-8">
           <header className="mb-6 flex items-center justify-between">
             <div>
+              <div className="mb-1 inline-flex rounded-full border border-white/80 bg-white/70 px-3 py-1 text-xs font-black text-slate-500 shadow-sm">
+                {meta.greeting}
+              </div>
               <h1 className="text-2xl font-black text-slate-800 md:text-3xl text-3d">{title}</h1>
               <p className="text-sm font-bold text-slate-600 md:text-base mt-1">{subtitle}</p>
             </div>

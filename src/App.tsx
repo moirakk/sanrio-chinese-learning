@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import UnitPage from './pages/UnitPage';
 import MyRoomPage from './pages/MyRoomPage';
 import TogetherPage from './pages/TogetherPage';
+import ParentPage from './pages/ParentPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/unit/:id" element={<UnitPage />} />
         <Route path="/myroom" element={<MyRoomPage />} />
         <Route path="/together" element={<TogetherPage />} />
+        <Route path="/parent" element={<ParentPage />} />
       </Routes>
     </HashRouter>
   );

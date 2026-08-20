@@ -8,6 +8,8 @@ export interface ProfileMeta {
   label: string;
   routeName: string;
   description: string;
+  accent: 'rose' | 'violet';
+  greeting: string;
   defaultTimerSec: number;
   uiMode: 'simple' | 'dense';
 }
@@ -18,6 +20,8 @@ export const PROFILE_META: Record<Profile, ProfileMeta> = {
     label: 'May',
     routeName: 'やさしいルート',
     description: '大きいボタン、やさしい問題、ゆっくりタイマー',
+    accent: 'rose',
+    greeting: 'May のおへや',
     defaultTimerSec: 45,
     uiMode: 'simple',
   },
@@ -26,6 +30,8 @@ export const PROFILE_META: Record<Profile, ProfileMeta> = {
     label: 'Yuna',
     routeName: 'チャレンジルート',
     description: '問題多め、会話長め、タイマー短め',
+    accent: 'violet',
+    greeting: 'Yuna のおへや',
     defaultTimerSec: 30,
     uiMode: 'dense',
   },

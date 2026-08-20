@@ -31,7 +31,7 @@ const stickersOptions = [
 ];
 
 export default function MyRoomPage() {
-  const { profile } = useProfile();
+  const { profile, meta } = useProfile();
   const progress = getProgress(profile);
   
   const quote = useMemo(() => dailyQuotes[new Date().getDay() % dailyQuotes.length], []);
@@ -235,15 +235,16 @@ export default function MyRoomPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {/* Save/Load Area */}
         <section className="rounded-3xl bg-orange-50 border-2 border-orange-200 p-6 card-shadow">
-          <h3 className="text-xl font-black text-orange-600 mb-4">セーブ / ロード</h3>
+          <h3 className="text-xl font-black text-orange-600 mb-1">セーブ / ロード</h3>
+          <p className="mb-4 text-sm font-bold text-orange-500">{meta.label} のデータだけを保存・読み込みします</p>
           <div className="flex gap-4">
             <button onClick={handleSave} className="flex-1 bg-white border-2 border-orange-300 rounded-2xl py-3 font-bold text-orange-500 btn-3d relative">
-              💾 セーブする
+              💾 {meta.label} をセーブ
               {saveFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">{saveFeedback}</span>}
             </button>
             <input type="file" ref={fileInputRef} accept=".json" onChange={handleLoad} className="hidden" />
             <button onClick={() => fileInputRef.current?.click()} className="flex-1 bg-white border-2 border-orange-300 rounded-2xl py-3 font-bold text-orange-500 btn-3d">
-              📂 ロードする
+              📂 {meta.label} にロード
             </button>
           </div>
         </section>
