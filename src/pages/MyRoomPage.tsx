@@ -183,6 +183,10 @@ export default function MyRoomPage() {
               <span className="text-amber-500">🏅 ゲームクリア</span>
               <span className="text-slate-700">{progress.clearedUnits.length}ユニット</span>
             </div>
+            <div className="flex justify-between items-center text-sm font-bold bg-rose-50 px-4 py-2 rounded-xl border border-rose-100">
+              <span className="text-rose-500">🔥 れんぞく</span>
+              <span className="text-slate-700">{progress.streakDays ?? 0}日</span>
+            </div>
           </div>
         </section>
 

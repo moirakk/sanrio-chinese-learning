@@ -94,10 +94,10 @@ export default function Layout({
   const ProfileButton = () => (
     <button 
       onClick={handleProfileSwitch}
-      className="flex items-center gap-2 btn-3d rounded-full bg-white px-2 py-1.5 border-2 border-pink-200 hover:border-pink-400 transition-colors group"
+      className="flex items-center gap-2 rounded-full border border-rose-100 bg-white px-2 py-1.5 shadow-sm transition-colors hover:border-rose-300 group"
       aria-label="プロフィール切り替え"
     >
-      <div className="w-9 h-9 rounded-full bg-pink-100 flex items-center justify-center overflow-hidden border border-pink-300 group-hover:scale-110 transition-transform pop-in">
+      <div className="w-9 h-9 rounded-full bg-rose-50 flex items-center justify-center overflow-hidden border border-rose-100 group-hover:scale-110 transition-transform pop-in">
         {profile === 'sister9' ? (
           <MelodyGuide className="w-8 h-8" />
         ) : (
@@ -116,7 +116,7 @@ export default function Layout({
   return (
     <div className="flex min-h-screen">
       {/* Desktop Sidebar (md+) */}
-      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-24 flex-col items-center py-8 gap-4 bg-white/90 backdrop-blur border-r border-pink-100 z-50">
+      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-24 flex-col items-center py-8 gap-4 bg-white/82 backdrop-blur-xl border-r border-white/80 shadow-[12px_0_40px_rgba(148,163,184,0.12)] z-50">
         <div className="flex flex-col gap-6 w-full px-2 mt-4">
           {nav.map((item) => {
             const active = item.to === '/unit/1' ? location.pathname.startsWith('/unit/') : location.pathname === item.to;
@@ -127,13 +127,13 @@ export default function Layout({
                 to={item.to}
                 aria-label={`${item.label}へ移動`}
                 className={`flex flex-col items-center justify-center w-full aspect-square rounded-2xl transition-all duration-300 relative ${
-                  active ? 'bg-pink-100 scale-105 border border-pink-200' : 'hover:bg-slate-50 hover:scale-105'
+                  active ? 'bg-rose-50 scale-105 border border-rose-100 shadow-sm' : 'hover:bg-slate-50 hover:scale-105'
                 }`}
               >
                 <div className={`w-10 h-10 flex items-center justify-center transition-transform ${active ? 'animate-bob' : ''}`}>
                   <Icon className="w-full h-full drop-shadow-sm" />
                 </div>
-                <span className={`text-[11px] font-extrabold mt-1 tracking-wider ${active ? item.color : 'text-slate-500'}`}>
+                <span className={`text-[11px] font-extrabold mt-1 ${active ? item.color : 'text-slate-500'}`}>
                   {item.label}
                 </span>
               </Link>
@@ -147,7 +147,7 @@ export default function Layout({
              className="flex flex-col items-center gap-1 group hover:scale-105 transition-transform"
              title="プロフィール切替"
            >
-              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border-2 border-pink-200 shadow-sm group-hover:border-pink-400">
+              <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden border border-rose-100 shadow-sm group-hover:border-rose-300">
                 {profile === 'sister9' ? (
                   <MelodyGuide className="w-10 h-10" />
                 ) : (
@@ -163,10 +163,10 @@ export default function Layout({
       
       {/* Main Content Area */}
       <div className="flex-1 md:ml-24 pb-24 md:pb-8 page-transition">
-        <div className="mx-auto max-w-5xl p-4 md:p-8">
+        <div className="mx-auto max-w-6xl p-4 md:p-8">
           <header className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-black text-pink-500 md:text-3xl text-3d tracking-wider">{title}</h1>
+              <h1 className="text-2xl font-black text-slate-800 md:text-3xl text-3d">{title}</h1>
               <p className="text-sm font-bold text-slate-600 md:text-base mt-1">{subtitle}</p>
             </div>
             
@@ -184,7 +184,7 @@ export default function Layout({
       </div>
 
       {/* Mobile Bottom Tab Bar (below md) */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-pink-100 z-50 shadow-[0_-4px_20px_rgba(255,183,197,0.15)] pb-[env(safe-area-inset-bottom)]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-rose-100 z-50 shadow-[0_-8px_28px_rgba(148,163,184,0.18)] pb-[env(safe-area-inset-bottom)]">
         <div className="flex justify-around items-center h-[64px] px-2">
           {nav.map((item) => {
             const active = item.to === '/unit/1' ? location.pathname.startsWith('/unit/') : location.pathname === item.to;
@@ -195,13 +195,13 @@ export default function Layout({
                 to={item.to}
                 aria-label={`${item.label}へ移動`}
                 className={`flex flex-col items-center justify-center flex-1 h-[56px] mx-1 rounded-xl transition-all duration-300 relative ${
-                  active ? 'bg-pink-50' : ''
+                  active ? 'bg-rose-50' : ''
                 }`}
               >
                 <div className={`w-7 h-7 flex items-center justify-center transition-transform ${active ? 'animate-bob scale-110' : ''}`}>
                   <Icon className="w-full h-full drop-shadow-sm" />
                 </div>
-                <span className={`text-[10px] font-extrabold mt-0.5 tracking-wider ${active ? item.color : 'text-slate-500'}`}>
+                <span className={`text-[10px] font-extrabold mt-0.5 ${active ? item.color : 'text-slate-500'}`}>
                   {item.label}
                 </span>
               </Link>

@@ -11,3 +11,6 @@ All notable changes to this family learning app will be documented here.
 - Fixed code check warnings in the unit game and room pages.
 - Updated the app favicon and page metadata.
 - Updated the GitHub Pages workflow to Node.js 24-compatible Actions.
+- Redesigned the home page around a daily practice flow.
+- Added streak tracking after successful unit clears.
+- Refined the global visual style for a cleaner, softer learning interface.

@@ -9,6 +9,8 @@ type ProgressState = {
   learnedKanji: string[];
   learnedPhrases: string[];
   unlockedCharacters: string[];
+  lastPracticeDate?: string;
+  streakDays?: number;
 };
 
 const defaultState: ProgressState = {
@@ -20,6 +22,7 @@ const defaultState: ProgressState = {
   learnedKanji: [],
   learnedPhrases: [],
   unlockedCharacters: ['Kitty風'],
+  streakDays: 0,
 };
 
 function key(profile: Profile) {
@@ -36,6 +39,32 @@ export function getProgress(profile: Profile): ProgressState {
   } catch {
     return defaultState;
   }
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function previousDateKey(date: Date) {
+  const prev = new Date(date);
+  prev.setDate(prev.getDate() - 1);
+  return prev.toISOString().slice(0, 10);
+}
+
+function withDailyPractice(now: ProgressState): ProgressState {
+  const today = todayKey();
+  if (now.lastPracticeDate === today) return now;
+
+  const yesterday = previousDateKey(new Date());
+  const streakDays = now.lastPracticeDate === yesterday ? (now.streakDays ?? 0) + 1 : 1;
+  const badges = streakDays >= 3 && !now.badges.includes('3-day-streak') ? [...now.badges, '3-day-streak'] : now.badges;
+
+  return {
+    ...now,
+    badges,
+    lastPracticeDate: today,
+    streakDays,
+  };
 }
 
 export function saveProgress(profile: Profile, next: ProgressState) {
@@ -75,5 +104,5 @@ export function clearUnit(profile: Profile, unitId: number, starsEarned: number,
   const clearedUnits = alreadyCleared ? now.clearedUnits : [...now.clearedUnits, unitId];
   const stars = now.stars + (alreadyCleared ? Math.max(1, Math.floor(starsEarned / 2)) : starsEarned);
   const hearts = now.hearts + heartsEarned;
-  saveProgress(profile, { ...now, clearedUnits, stars, hearts });
+  saveProgress(profile, withDailyPractice({ ...now, clearedUnits, stars, hearts }));
 }
