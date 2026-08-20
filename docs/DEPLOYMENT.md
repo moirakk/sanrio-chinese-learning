@@ -29,7 +29,7 @@ The workflow lives at:
 It runs on pushes to `main` and manual workflow dispatch. The workflow:
 
 1. checks out the repository
-2. installs dependencies with `npm ci`
+2. installs dependencies with Node.js 24 and `npm ci`
 3. builds the app with `npm run build`
 4. uploads `dist`
 5. deploys to GitHub Pages
