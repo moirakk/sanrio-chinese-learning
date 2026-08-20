@@ -1,32 +1,122 @@
-# React + TypeScript + Vite
+# Sanrio Chinese Learning
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A private, family-focused Chinese learning web app for two children. It uses a cute Sanrio-inspired visual style, short lessons, browser speech playback, and small games to make daily Mandarin practice feel light and repeatable.
 
-Currently, two official plugins are available:
+> This is a personal learning project. The character-inspired artwork and naming should be treated as private/family use unless the branding and assets are reviewed for public distribution.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## What It Includes
 
-## React Compiler
+- 15 lesson units across three chapters
+- Pinyin, hanzi, and short conversation practice
+- Unit unlock progression for two profiles: May and Yuna
+- Mini games: memory, tone, puzzle, hunt, fill-in-the-blank, and word order
+- Two-player challenge mode
+- "My Room" progress dashboard, learned words, message board, and save/load
+- Browser-based Mandarin and Japanese speech playback
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the Oxlint configuration
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Tailwind CSS
+- Framer Motion
+- Lucide React
+- Oxlint
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Getting Started
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+Install dependencies:
+
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Start the local app:
+
+```bash
+npm run dev
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+Run code checks:
+
+```bash
+npm run lint
+```
+
+Run the full local verification:
+
+```bash
+npm run verify
+```
+
+Preview the production build:
+
+```bash
+npm run preview
+```
+
+## Project Structure
+
+```text
+src/
+  assets/          Character illustrations and app artwork
+  components/      Shared UI pieces
+  data/            Lesson data
+  hooks/           Profile and app state hooks
+  pages/           Main app screens
+  utils/           Storage and speech helpers
+docs/              Maintenance notes
+public/            Static deployment assets
+```
+
+Useful maintenance docs:
+
+- [Project notes](docs/PROJECT_NOTES.md)
+- [Deployment](docs/DEPLOYMENT.md)
+- [Repository checklist](docs/REPOSITORY_CHECKLIST.md)
+
+## Progress And Data
+
+The app has no backend. Learning progress is saved in the browser through `localStorage`.
+
+Important local storage keys:
+
+- `sanrio_profile`
+- `sanrio_progress_sister9`
+- `sanrio_progress_sister12`
+- `sanrio_messageboard`
+- `sanrio_speech_rate`
+
+The "My Room" page includes JSON save/load controls so progress can be backed up manually.
+
+## Deployment Notes
+
+The project builds to static files in `dist/`. It uses `HashRouter`, so routes work on simple static hosting without server-side rewrites.
+
+`public/CNAME` currently points to:
+
+```text
+yunawithmay.site
+```
+
+DNS was checked on 2026-08-20:
+
+- `yunawithmay.site` points to GitHub Pages.
+- `www.yunawithmay.site` points to `moirakk.github.io`.
+- The repository includes a GitHub Pages workflow at `.github/workflows/deploy.yml`.
+
+## Maintenance Priorities
+
+1. Keep lesson data clear and age-appropriate.
+2. Verify unit unlock and progress behavior after game logic changes.
+3. Test speech playback on the children's actual devices.
+4. Keep public deployment branding and assets private-use appropriate.
+5. Keep one-off generation or patch scripts out of the repository unless they become part of the normal maintenance flow.

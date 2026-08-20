@@ -1,0 +1,34 @@
+name: Bug Report
+description: Report something that is broken or confusing.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem clearly.
+      placeholder: Unit 3 does not unlock after clearing Unit 2.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the home page
+        2. Switch to May
+        3. Clear Unit 2
+        4. Return home
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and browser
+      placeholder: iPad Safari, Mac Chrome, etc.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Add screenshots, console messages, or anything else useful.

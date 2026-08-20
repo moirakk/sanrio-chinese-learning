@@ -1,13 +1,24 @@
 {
   "name": "sanrio-chinese-learning",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "A private family Chinese learning app for May and Yuna.",
   "type": "module",
+  "homepage": "https://yunawithmay.site",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moirakk/sanrio-chinese-learning.git"
+  },
+  "bugs": {
+    "url": "https://github.com/moirakk/sanrio-chinese-learning/issues"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc -b",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "verify": "npm run lint && npm run build"
   },
   "dependencies": {
     "clsx": "^2.1.1",

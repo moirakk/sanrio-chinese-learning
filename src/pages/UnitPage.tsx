@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const PINYIN_CHAR_MAP: Record<string, string> = {
   // 韵母（元音）
@@ -259,10 +259,10 @@ export default function UnitPage() {
   const [memoryMistakes, setMemoryMistakes] = useState(0);
 
   const locked = unit ? !isUnitUnlocked(profile, unit.id) : true;
-  const scope = useMemo(() => (unit ? buildScope(unit.id) : []), [unit?.id]);
-  const pinyin = scope.flatMap((u) => u.pinyin);
-  const kanji = scope.flatMap((u) => u.kanji);
-  const conversation = scope.flatMap((u) => u.conversation);
+  const scope = useMemo(() => buildScope(unitId), [unitId]);
+  const pinyin = useMemo(() => scope.flatMap((u) => u.pinyin), [scope]);
+  const kanji = useMemo(() => scope.flatMap((u) => u.kanji), [scope]);
+  const conversation = useMemo(() => scope.flatMap((u) => u.conversation), [scope]);
   const totalQuestions = unit?.id === 15 ? 15 : (unit?.isTest ? 10 : 5);
   const passRate = unit?.isTest ? 0.8 : 0.6;
 
@@ -287,7 +287,7 @@ export default function UnitPage() {
       if (k === 'match') out.push(match[i % match.length]);
     }
     return shuffle(out);
-  }, [unit?.id, pinyin.length, kanji.length, conversation.length]);
+  }, [unit, pinyin, kanji, conversation, totalQuestions]);
 
   const normalQuestions = useMemo(() => {
     if (!unit || unit.isTest || baseGameKind === 'memory') return [];
@@ -296,7 +296,7 @@ export default function UnitPage() {
     if (baseGameKind === 'hunt') return buildHuntQuestions(kanji, totalQuestions);
     if (baseGameKind === 'fill') return buildFillQuestions(conversation, totalQuestions);
     return buildOrderQuestions(conversation, totalQuestions);
-  }, [unit?.id, baseGameKind, pinyin.length, kanji.length, conversation.length]);
+  }, [unit, baseGameKind, kanji, conversation, totalQuestions]);
 
   const current = unit?.isTest ? mixedQuestions[index] : normalQuestions[index];
 
@@ -316,7 +316,7 @@ export default function UnitPage() {
     setMemoryMistakes(0);
   }
 
-  function finish(finalScore: number) {
+  const finish = useCallback((finalScore: number) => {
     const pass = finalScore / totalQuestions >= passRate;
     setResultPass(pass);
     setPhase('result');
@@ -324,9 +324,9 @@ export default function UnitPage() {
       clearUnit(profile, unit.id, unit.stars * 3, 1);
       updateLearned(profile, kanji.map((x) => x.hanzi), conversation.map((x) => x.zh));
     }
-  }
+  }, [conversation, kanji, passRate, profile, totalQuestions, unit]);
 
-  function nextAfterFeedback(ok: boolean, answerText: string, selected?: string) {
+  const nextAfterFeedback = useCallback((ok: boolean, answerText: string, selected?: string) => {
     if (lockedClick) return;
     setLockedClick(true);
     setSelectedId(selected ?? null);
@@ -350,7 +350,7 @@ export default function UnitPage() {
         finish(nextScore);
       }
     }, 1500);
-  }
+  }, [baseGameKind, finish, index, kanji, lockedClick, pinyin, score, totalQuestions, unit?.isTest]);
 
   useEffect(() => {
     if (phase !== 'game' || lockedClick) return;
@@ -367,13 +367,13 @@ export default function UnitPage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [phase, lockedClick, index, unit?.isTest, current?.kind]);
+  }, [baseGameKind, current, index, lockedClick, nextAfterFeedback, phase, unit?.isTest]);
 
   useEffect(() => {
     if (phase === 'game' && baseGameKind === 'memory' && memoryDeck.length === 0) {
       setMemoryDeck(buildMemoryRound(pinyin, kanji));
     }
-  }, [phase, baseGameKind, memoryDeck.length, pinyin.length, kanji.length]);
+  }, [phase, baseGameKind, memoryDeck.length, pinyin, kanji]);
 
   // Auto-read Chinese content when a new game question appears
   useEffect(() => {
@@ -382,7 +382,7 @@ export default function UnitPage() {
     if (text) {
       speak(text, 'zh-CN');
     }
-  }, [phase, index]);
+  }, [phase, index, current]);
 
   if (!unit) {
     return (

@@ -81,7 +81,7 @@ export default function MyRoomPage() {
         } else {
           alert('ファイルが読めないよ 😢');
         }
-      } catch (err) {
+      } catch {
         alert('ファイルが読めないよ 😢');
       }
     };
