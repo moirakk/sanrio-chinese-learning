@@ -19,7 +19,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SpeakButton from '../components/SpeakButton';
 import { getUnit, units } from '../data/units';
-import { clearUnit, isUnitUnlocked, updateLearned } from '../utils/storage';
+import { clearUnit, isUnitUnlocked, recordReviewMiss, updateLearned } from '../utils/storage';
 import { speak } from '../utils/speech';
 import { useProfile } from '../hooks/useProfile';
 import type { ConversationItem, KanjiItem, PinyinItem, Question, QuestionKind } from '../types';
@@ -330,6 +330,15 @@ export default function UnitPage() {
     if (lockedClick) return;
     setLockedClick(true);
     setSelectedId(selected ?? null);
+    if (!ok && current && unit) {
+      recordReviewMiss(profile, {
+        unitId: unit.id,
+        kind: current.kind,
+        prompt: current.prompt,
+        answer: current.answer,
+        options: current.options,
+      });
+    }
     const nextScore = score + (ok ? 1 : 0);
     setScore(nextScore);
     setMsg(ok ? '正解！' : `おしい！ 正解: ${answerText}`);
@@ -350,7 +359,7 @@ export default function UnitPage() {
         finish(nextScore);
       }
     }, 1500);
-  }, [baseGameKind, finish, index, kanji, lockedClick, pinyin, score, totalQuestions, unit?.isTest]);
+  }, [baseGameKind, current, finish, index, kanji, lockedClick, pinyin, profile, score, totalQuestions, unit]);
 
   useEffect(() => {
     if (phase !== 'game' || lockedClick) return;
@@ -406,10 +415,10 @@ export default function UnitPage() {
   return (
     <Layout title={`ユニット ${unit.id}：${unit.titleJa}`} subtitle={`${unit.titleZh} • ${unit.isTest ? 'テスト' : '学習'} • ⭐${unit.stars}`}>
       <div className="space-y-6">
-        <section className="rounded-3xl glass-panel border-2 border-pink-200 p-4 md:p-6 flex items-center gap-4">
+        <section className="rounded-[2rem] border border-white/80 bg-white/85 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6 flex items-center gap-4">
           {guideByKey(unit.guide)}
           <div>
-            <p className="text-lg font-black text-pink-600">ガイドキャラといっしょに進もう！</p>
+            <p className="text-lg font-black text-slate-800">ガイドキャラといっしょに進もう！</p>
             <p className="text-sm font-bold text-slate-600">
               {phase === 'game' ? `問題 ${Math.min(index + 1, totalQuestions)}/${totalQuestions} • 正解 ${score}` : msg}
             </p>
@@ -417,7 +426,7 @@ export default function UnitPage() {
         </section>
 
         <section className="space-y-6">
-          <section className="rounded-3xl bg-pink-50 border-2 border-pink-200 p-4 md:p-6 card-shadow">
+          <section className="rounded-[2rem] bg-white/85 border border-rose-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-pink-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-pink-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-pink-200">一緒に発音してみよう！</div></div><h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {pinyin.map((item) => (
@@ -431,7 +440,7 @@ export default function UnitPage() {
               ))}
             </div>
           </section>
-          <section className="rounded-3xl bg-blue-50 border-2 border-blue-200 p-4 md:p-6 card-shadow">
+          <section className="rounded-[2rem] bg-white/85 border border-sky-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-blue-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-blue-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-blue-200">新しい漢字を覚えよう！</div></div><h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {kanji.map((item) => (
@@ -445,7 +454,7 @@ export default function UnitPage() {
               ))}
             </div>
           </section>
-          <section className="rounded-3xl bg-yellow-50 border-2 border-yellow-200 p-4 md:p-6 card-shadow">
+          <section className="rounded-[2rem] bg-white/85 border border-amber-100 p-4 md:p-6 card-shadow">
             <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-yellow-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-yellow-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-yellow-200">実際に使ってみよう！</div></div><h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
             <div className="space-y-3">
               {conversation.map((item, i) => (
@@ -594,30 +603,51 @@ export default function UnitPage() {
         )}
 
         {phase === 'result' && (
-          <section className="rounded-3xl bg-yellow-50 border-4 border-yellow-300 p-6 text-center card-shadow confetti">
-            <p className="text-2xl font-black text-yellow-600 mb-2">結果発表！</p>
-            <p className="font-black text-slate-700 mb-2">{score} / {totalQuestions} 正解</p>
-            <div className="text-2xl font-black mb-4">
-  {score === totalQuestions ? <span className="text-pink-500">すごい！完璧！✨</span> : 
-   score >= totalQuestions * 0.8 ? <span className="text-orange-500">よくできた！もうちょっとで満点！</span> :
-   resultPass ? <span className="text-blue-500">クリア！よくがんばったね！</span> :
-   <span className="text-slate-500">がんばった！復習してもう一回チャレンジ！</span>}
-</div>
-{unit.kanji.length > 0 && (
-  <div className="my-6 p-4 bg-white rounded-2xl border-2 border-yellow-200">
-    <p className="font-bold text-slate-500 text-sm mb-2">学んだ漢字のおさらい</p>
-    <div className="flex flex-wrap justify-center gap-3">
-      {unit.kanji.map((k: KanjiItem) => <span key={k.hanzi} className="text-3xl font-black text-slate-700">{k.hanzi}</span>)}
-    </div>
-  </div>
-)}
+          <section className="rounded-[2rem] border border-amber-100 bg-white/90 p-6 text-center shadow-[0_22px_55px_rgba(15,23,42,0.10)]">
+            <p className="text-sm font-black text-amber-500">今日のまとめ</p>
+            <p className="mt-1 text-3xl font-black text-slate-800">{score} / {totalQuestions} 正解</p>
+            <div className="mt-3 text-xl font-black">
+              {score === totalQuestions ? <span className="text-rose-500">すごい！完璧！</span> :
+                score >= totalQuestions * 0.8 ? <span className="text-orange-500">よくできた！もうちょっとで満点！</span> :
+                  resultPass ? <span className="text-sky-500">クリア！よくがんばったね！</span> :
+                    <span className="text-slate-500">復習してもう一回チャレンジ！</span>}
+            </div>
 
-            {resultPass ? <p className="font-bold text-pink-600 mb-4">⭐ クリア報酬獲得（再挑戦時は半分）</p> : null}
+            <div className="my-6 grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl bg-rose-50 p-4 text-left">
+                <p className="text-xs font-black text-rose-400">今日覚えた漢字</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {unit.kanji.slice(0, 8).map((k: KanjiItem) => (
+                    <span key={k.hanzi} className="rounded-xl bg-white px-3 py-2 text-2xl font-black text-slate-800 shadow-sm">{k.hanzi}</span>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-sky-50 p-4 text-left">
+                <p className="text-xs font-black text-sky-400">言えるフレーズ</p>
+                <div className="mt-3 space-y-2">
+                  {unit.conversation.slice(0, 3).map((line) => (
+                    <p key={line.id} className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm">{line.zh}</p>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-emerald-50 p-4 text-left">
+                <p className="text-xs font-black text-emerald-500">次におすすめ</p>
+                <p className="mt-3 text-lg font-black text-slate-800">
+                  {resultPass && unit.id < 15 ? `ユニット ${unit.id + 1}` : 'もう一回チャレンジ'}
+                </p>
+                <p className="mt-1 text-sm font-bold text-slate-500">
+                  {resultPass ? 'この調子で少しずつ進もう' : 'にがてをおさらいしよう'}
+                </p>
+              </div>
+            </div>
+
+            {resultPass ? <p className="font-bold text-rose-600 mb-4">クリア報酬を獲得しました</p> : null}
             <div className="flex flex-wrap justify-center gap-3">
-              <button onClick={resetGame} className="rounded-full px-6 py-3 bg-purple-500 text-white font-black btn-3d">もう一回チャレンジ！</button>
-              <button onClick={() => navigate('/')} className="rounded-full px-6 py-3 bg-pink-400 text-white font-black btn-3d">ホームへ</button>
+              <button onClick={resetGame} className="rounded-full px-6 py-3 bg-violet-500 text-white font-black btn-3d">もう一回</button>
+              <button onClick={() => navigate('/review')} className="rounded-full px-6 py-3 bg-sky-500 text-white font-black btn-3d">おさらい</button>
+              <button onClick={() => navigate('/')} className="rounded-full px-6 py-3 bg-slate-900 text-white font-black btn-3d">ホーム</button>
               {resultPass && unit.id < 15 ? (
-                <button onClick={() => navigate(`/unit/${unit.id + 1}`)} className="rounded-full px-6 py-3 bg-emerald-400 text-white font-black btn-3d">次のユニット</button>
+                <button onClick={() => navigate(`/unit/${unit.id + 1}`)} className="rounded-full px-6 py-3 bg-emerald-500 text-white font-black btn-3d">次のユニット</button>
               ) : null}
             </div>
           </section>

@@ -3,7 +3,7 @@ import { BookOpen, CalendarDays, Heart, Trophy } from 'lucide-react';
 import Layout from '../components/Layout';
 import { PROFILE_META, type Profile } from '../hooks/useProfile';
 import { units } from '../data/units';
-import { getProgress } from '../utils/storage';
+import { getActiveReviewItems, getProgress } from '../utils/storage';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
 
 const profiles: Profile[] = ['sister9', 'sister12'];
@@ -21,6 +21,7 @@ export default function ParentPage() {
           {profiles.map((profile) => {
             const meta = PROFILE_META[profile];
             const progress = getProgress(profile);
+            const reviewItems = getActiveReviewItems(profile);
             const completionPct = Math.round((progress.clearedUnits.length / units.length) * 100);
             const nextUnit = nextUnitFor(profile);
             const Guide = profile === 'sister9' ? MelodyGuide : KuromiGuide;
@@ -63,8 +64,8 @@ export default function ParentPage() {
                   </div>
                   <div className="rounded-2xl bg-slate-50 p-3">
                     <Heart className="mb-1 h-5 w-5 text-rose-500" />
-                    <p className="text-xl font-black text-slate-800">{progress.hearts}</p>
-                    <p className="text-xs font-bold text-slate-400">ハート</p>
+                    <p className="text-xl font-black text-slate-800">{reviewItems.length}</p>
+                    <p className="text-xs font-bold text-slate-400">復習</p>
                   </div>
                 </div>
 

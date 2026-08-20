@@ -5,6 +5,7 @@ import UnitPage from './pages/UnitPage';
 import MyRoomPage from './pages/MyRoomPage';
 import TogetherPage from './pages/TogetherPage';
 import ParentPage from './pages/ParentPage';
+import ReviewPage from './pages/ReviewPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/myroom" element={<MyRoomPage />} />
         <Route path="/together" element={<TogetherPage />} />
         <Route path="/parent" element={<ParentPage />} />
+        <Route path="/review" element={<ReviewPage />} />
       </Routes>
     </HashRouter>
   );

@@ -9,8 +9,21 @@ type ProgressState = {
   learnedKanji: string[];
   learnedPhrases: string[];
   unlockedCharacters: string[];
+  reviewItems: ReviewItem[];
   lastPracticeDate?: string;
   streakDays?: number;
+};
+
+export type ReviewItem = {
+  id: string;
+  unitId: number;
+  kind: string;
+  prompt: string;
+  answer: string;
+  options: string[];
+  misses: number;
+  lastMissedAt: number;
+  masteredAt?: number;
 };
 
 const defaultState: ProgressState = {
@@ -22,6 +35,7 @@ const defaultState: ProgressState = {
   learnedKanji: [],
   learnedPhrases: [],
   unlockedCharacters: ['Kitty風'],
+  reviewItems: [],
   streakDays: 0,
 };
 
@@ -90,6 +104,36 @@ export function updateLearned(profile: Profile, kanji: string[], phrases: string
   const learnedKanji = Array.from(new Set([...now.learnedKanji, ...kanji]));
   const learnedPhrases = Array.from(new Set([...now.learnedPhrases, ...phrases]));
   saveProgress(profile, { ...now, learnedKanji, learnedPhrases });
+}
+
+export function recordReviewMiss(profile: Profile, item: Omit<ReviewItem, 'id' | 'misses' | 'lastMissedAt'>) {
+  const now = getProgress(profile);
+  const id = `${item.unitId}:${item.kind}:${item.prompt}:${item.answer}`;
+  const existing = now.reviewItems.find((x) => x.id === id);
+  const nextItem: ReviewItem = {
+    ...item,
+    id,
+    misses: (existing?.misses ?? 0) + 1,
+    lastMissedAt: Date.now(),
+    masteredAt: undefined,
+  };
+  const reviewItems = [nextItem, ...now.reviewItems.filter((x) => x.id !== id)].slice(0, 40);
+  saveProgress(profile, { ...now, reviewItems });
+}
+
+export function markReviewMastered(profile: Profile, id: string) {
+  const now = getProgress(profile);
+  const reviewItems = now.reviewItems.map((item) =>
+    item.id === id ? { ...item, masteredAt: Date.now() } : item,
+  );
+  saveProgress(profile, { ...now, reviewItems });
+}
+
+export function getActiveReviewItems(profile: Profile) {
+  return getProgress(profile)
+    .reviewItems
+    .filter((item) => !item.masteredAt)
+    .sort((a, b) => b.misses - a.misses || b.lastMissedAt - a.lastMissedAt);
 }
 
 export function isUnitUnlocked(profile: Profile, unitId: number) {

@@ -15,3 +15,5 @@ All notable changes to this family learning app will be documented here.
 - Added streak tracking after successful unit clears.
 - Refined the global visual style for a cleaner, softer learning interface.
 - Added clearer May/Yuna learning spaces and a parent progress page.
+- Added a real review queue for missed questions.
+- Upgraded unit completion into a clearer learning summary.

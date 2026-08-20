@@ -3,7 +3,7 @@ import { ArrowRight, BookOpen, Heart, Lock, Play, RotateCcw, Sparkles, Trophy, U
 import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
 import { units } from '../data/units';
-import { getProgress, isUnitUnlocked } from '../utils/storage';
+import { getActiveReviewItems, getProgress, isUnitUnlocked } from '../utils/storage';
 import {
   KittyGuide,
   MelodyGuide,
@@ -40,6 +40,7 @@ export default function Home() {
   const completionPct = Math.round((clearedCount / units.length) * 100);
   const streakDays = progress.streakDays ?? 0;
   const profileName = profile === 'sister9' ? 'May' : 'Yuna';
+  const reviewCount = getActiveReviewItems(profile).length;
 
   return (
     <Layout title="中国語ランド" subtitle={`${profileName}の今日の練習`}>
@@ -102,11 +103,11 @@ export default function Home() {
                   はじめる
                 </Link>
                 <Link
-                  to={`/unit/${reviewUnit.id}`}
+                  to={reviewCount > 0 ? '/review' : `/unit/${reviewUnit.id}`}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-sky-100 bg-sky-50 px-6 py-4 text-lg font-black text-sky-700 transition-transform hover:scale-[1.02] active:scale-[0.99]"
                 >
                   <RotateCcw className="h-5 w-5" />
-                  復習する
+                  {reviewCount > 0 ? `にがて ${reviewCount}問` : '復習する'}
                 </Link>
               </div>
             </div>
@@ -154,11 +155,11 @@ export default function Home() {
             </div>
             <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
           </Link>
-          <Link to={`/unit/${reviewUnit.id}`} className="quick-card group border-sky-100 bg-sky-50">
+          <Link to={reviewCount > 0 ? '/review' : `/unit/${reviewUnit.id}`} className="quick-card group border-sky-100 bg-sky-50">
             <RotateCcw className="h-6 w-6 text-sky-500" />
             <div>
               <p className="font-black text-slate-800">おさらい</p>
-              <p className="text-sm font-bold text-slate-500">最近のユニット</p>
+              <p className="text-sm font-bold text-slate-500">{reviewCount > 0 ? `${reviewCount}問のにがて` : '最近のユニット'}</p>
             </div>
             <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
           </Link>
