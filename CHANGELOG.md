@@ -10,3 +10,4 @@ All notable changes to this family learning app will be documented here.
 - Added project metadata and a local `verify` script.
 - Fixed code check warnings in the unit game and room pages.
 - Updated the app favicon and page metadata.
+- Updated the GitHub Pages workflow to Node.js 24-compatible Actions.

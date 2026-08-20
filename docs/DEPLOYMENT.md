@@ -34,6 +34,8 @@ It runs on pushes to `main` and manual workflow dispatch. The workflow:
 4. uploads `dist`
 5. deploys to GitHub Pages
 
+The workflow uses Node.js 24-compatible GitHub Actions.
+
 ## Before Deploying
 
 Run:
