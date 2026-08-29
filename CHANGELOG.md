@@ -2,6 +2,15 @@
 
 All notable changes to this family learning app will be documented here.
 
+## Unreleased
+
+- Added safer fallbacks for profile selection, progress data, speech speed, and the local message board.
+- Improved pinyin speech examples for whole-syllable and tone practice.
+- Changed two-player unit selection to use shared unlocked units instead of only shared completed units.
+- Stopped repeated clears from granting duplicate stars and hearts.
+- Added a production-domain check after GitHub Pages deployments.
+- Discouraged search indexing from the public page metadata.
+
 ## 0.1.0 - 2026-08-20
 
 - Replaced the Vite template README with a real project overview.

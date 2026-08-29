@@ -4,7 +4,10 @@ const DEFAULT_RATE = 0.6;
 export function getSpeechRate(): number {
   try {
     const stored = localStorage.getItem(RATE_KEY);
-    if (stored) return parseFloat(stored);
+    if (stored) {
+      const parsed = parseFloat(stored);
+      if (Number.isFinite(parsed) && parsed >= 0.4 && parsed <= 1.2) return parsed;
+    }
   } catch {
     // ignore
   }

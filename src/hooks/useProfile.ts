@@ -37,13 +37,26 @@ export const PROFILE_META: Record<Profile, ProfileMeta> = {
   },
 };
 
+export function isProfile(value: unknown): value is Profile {
+  return value === 'sister9' || value === 'sister12';
+}
+
 export function useProfile() {
   const [profile, setProfile] = useState<Profile>(() => {
-    return (localStorage.getItem('sanrio_profile') as Profile) || 'sister9';
+    try {
+      const stored = localStorage.getItem('sanrio_profile');
+      return isProfile(stored) ? stored : 'sister9';
+    } catch {
+      return 'sister9';
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('sanrio_profile', profile);
+    try {
+      localStorage.setItem('sanrio_profile', profile);
+    } catch {
+      // Keep the app usable even when storage is blocked.
+    }
   }, [profile]);
 
   return { profile, setProfile, meta: PROFILE_META[profile] };

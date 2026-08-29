@@ -5,6 +5,7 @@ import { getProgress } from '../utils/storage';
 import { useMemo, useState, useRef, useEffect } from 'react';
 
 type RoomTab = 'growth' | 'words' | 'data' | 'board';
+type BoardMessage = { sender: string, sticker: string, emoji: string, label: string, message: string, timestamp: number };
 
 const allCharacters = [
   { name: 'Kitty風', Guide: KittyGuide, threshold: 0 },
@@ -31,6 +32,26 @@ const stickersOptions = [
   { id: 'kuromi', emoji: '💜', label: '負けないよ！', Guide: KuromiGuide },
   { id: 'pochacco', emoji: '⚽', label: 'ファイト！', Guide: PochaccoGuide },
 ];
+
+function readBoardMessages(): BoardMessage[] {
+  try {
+    const data = localStorage.getItem('sanrio_messageboard');
+    const parsed = data ? JSON.parse(data) : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((message): message is BoardMessage => (
+      message &&
+      typeof message === 'object' &&
+      typeof message.sender === 'string' &&
+      typeof message.sticker === 'string' &&
+      typeof message.emoji === 'string' &&
+      typeof message.label === 'string' &&
+      typeof message.message === 'string' &&
+      typeof message.timestamp === 'number'
+    ));
+  } catch {
+    return [];
+  }
+}
 
 export default function MyRoomPage() {
   const { profile, meta } = useProfile();
@@ -93,7 +114,7 @@ export default function MyRoomPage() {
   };
 
   // --- Message Board Logic ---
-  const [messages, setMessages] = useState<{ sender: string, sticker: string, emoji: string, label: string, message: string, timestamp: number }[]>([]);
+  const [messages, setMessages] = useState<BoardMessage[]>([]);
   const [composing, setComposing] = useState(false);
   const [selectedSticker, setSelectedSticker] = useState<number | null>(null);
   const [messageText, setMessageText] = useState('');
@@ -101,17 +122,13 @@ export default function MyRoomPage() {
   const [sentFeedback, setSentFeedback] = useState(false);
 
   useEffect(() => {
-    const data = localStorage.getItem('sanrio_messageboard');
-    if (data) {
-      setMessages(JSON.parse(data));
-    }
+    setMessages(readBoardMessages());
   }, []);
 
   const handlePostMessage = () => {
     if (selectedSticker === null) return;
     
-    const existingStr = localStorage.getItem('sanrio_messageboard');
-    const existing = existingStr ? JSON.parse(existingStr) : [];
+    const existing = readBoardMessages();
     
     const newMessage = {
       sender: profile === 'sister9' ? 'May' : 'Yuna',
@@ -123,7 +140,11 @@ export default function MyRoomPage() {
     };
     
     const updatedMessages = [newMessage, ...existing].slice(0, 20);
-    localStorage.setItem('sanrio_messageboard', JSON.stringify(updatedMessages));
+    try {
+      localStorage.setItem('sanrio_messageboard', JSON.stringify(updatedMessages));
+    } catch {
+      // Keep the board visible even if the browser refuses storage writes.
+    }
     setMessages(updatedMessages);
     
     setComposing(false);

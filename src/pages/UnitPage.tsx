@@ -14,6 +14,9 @@ const PINYIN_CHAR_MAP: Record<string, string> = {
   iu: '优', ian: '烟', in: '因', iang: '央', ing: '英', iong: '用',
   ua: '蛙', uo: '窝', ui: '威', uan: '弯', un: '温', uang: '汪',
   üe: '约', üan: '冤', ün: '晕',
+  zhi: '知', chi: '吃', shi: '是', ri: '日',
+  zi: '字', ci: '次', si: '四',
+  'ˉ': '妈', 'ˊ': '麻', 'ˇ': '马', 'ˋ': '骂',
 };
 import { useNavigate, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';

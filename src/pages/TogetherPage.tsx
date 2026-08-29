@@ -3,22 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
 import { units, getUnit } from '../data/units';
-import { getProgress } from '../utils/storage';
+import { isUnitUnlocked } from '../utils/storage';
 
 export default function TogetherPage() {
   const navigate = useNavigate();
   
-  const p1Progress = getProgress('sister9');
-  const p2Progress = getProgress('sister12');
-  
-  // Both must have cleared it, or just show all unlocked for either? 
-  // Requirement: "选择已解锁的任意单元（取两人共同已解锁的单元）"
-  const unlockedUnits = units.filter(u => 
-    p1Progress.clearedUnits.includes(u.id) && p2Progress.clearedUnits.includes(u.id)
-  );
-
-  // If no common units, just fallback to unit 1
-  const availableUnits = unlockedUnits.length > 0 ? unlockedUnits : [units[0]];
+  const availableUnits = units.filter((unit) => (
+    isUnitUnlocked('sister9', unit.id) && isUnitUnlocked('sister12', unit.id)
+  ));
 
   const [step, setStep] = useState<'select' | 'game' | 'result'>('select');
   

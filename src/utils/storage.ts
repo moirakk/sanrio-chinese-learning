@@ -28,32 +28,76 @@ export type ReviewItem = {
   masteredAt?: number;
 };
 
-const defaultState: ProgressState = {
-  stars: 0,
-  hearts: 0,
-  badges: [],
-  clearedGames: [],
-  clearedUnits: [],
-  learnedKanji: [],
-  learnedPhrases: [],
-  unlockedCharacters: ['Kitty風'],
-  reviewItems: [],
-  streakDays: 0,
-};
+function defaultProgress(): ProgressState {
+  return {
+    stars: 0,
+    hearts: 0,
+    badges: [],
+    clearedGames: [],
+    clearedUnits: [],
+    learnedKanji: [],
+    learnedPhrases: [],
+    unlockedCharacters: ['Kitty風'],
+    reviewItems: [],
+    streakDays: 0,
+  };
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+}
+
+function asNumberArray(value: unknown): number[] {
+  return Array.isArray(value) ? value.filter((item): item is number => Number.isFinite(item)) : [];
+}
+
+function asReviewItems(value: unknown): ReviewItem[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is ReviewItem => {
+    if (!item || typeof item !== 'object') return false;
+    const candidate = item as Partial<ReviewItem>;
+    return (
+      typeof candidate.id === 'string' &&
+      typeof candidate.unitId === 'number' &&
+      typeof candidate.kind === 'string' &&
+      typeof candidate.prompt === 'string' &&
+      typeof candidate.answer === 'string' &&
+      Array.isArray(candidate.options) &&
+      typeof candidate.misses === 'number' &&
+      typeof candidate.lastMissedAt === 'number'
+    );
+  });
+}
+
+function normalizeProgress(value: unknown): ProgressState {
+  const base = defaultProgress();
+  if (!value || typeof value !== 'object') return base;
+  const parsed = value as Partial<ProgressState>;
+  return {
+    stars: Number.isFinite(parsed.stars) ? parsed.stars as number : base.stars,
+    hearts: Number.isFinite(parsed.hearts) ? parsed.hearts as number : base.hearts,
+    badges: asStringArray(parsed.badges),
+    clearedGames: asStringArray(parsed.clearedGames),
+    clearedUnits: asNumberArray(parsed.clearedUnits),
+    learnedKanji: asStringArray(parsed.learnedKanji),
+    learnedPhrases: asStringArray(parsed.learnedPhrases),
+    unlockedCharacters: asStringArray(parsed.unlockedCharacters).length ? asStringArray(parsed.unlockedCharacters) : base.unlockedCharacters,
+    reviewItems: asReviewItems(parsed.reviewItems),
+    lastPracticeDate: typeof parsed.lastPracticeDate === 'string' ? parsed.lastPracticeDate : undefined,
+    streakDays: Number.isFinite(parsed.streakDays) ? parsed.streakDays as number : base.streakDays,
+  };
+}
 
 function key(profile: Profile) {
   return `sanrio_progress_${profile}`;
 }
 
 export function getProgress(profile: Profile): ProgressState {
-  const raw = localStorage.getItem(key(profile));
-  if (!raw) {
-    return defaultState;
-  }
   try {
-    return { ...defaultState, ...JSON.parse(raw) as ProgressState };
+    const raw = localStorage.getItem(key(profile));
+    return raw ? normalizeProgress(JSON.parse(raw)) : defaultProgress();
   } catch {
-    return defaultState;
+    return defaultProgress();
   }
 }
 
@@ -84,7 +128,11 @@ function withDailyPractice(now: ProgressState): ProgressState {
 }
 
 export function saveProgress(profile: Profile, next: ProgressState) {
-  localStorage.setItem(key(profile), JSON.stringify(next));
+  try {
+    localStorage.setItem(key(profile), JSON.stringify(normalizeProgress(next)));
+  } catch {
+    // Ignore storage failures so practice flow never crashes.
+  }
 }
 
 export function addStars(profile: Profile, stars: number, hearts: number = 0) {
@@ -166,7 +214,7 @@ export function clearUnit(profile: Profile, unitId: number, starsEarned: number,
   const now = getProgress(profile);
   const alreadyCleared = now.clearedUnits.includes(unitId);
   const clearedUnits = alreadyCleared ? now.clearedUnits : [...now.clearedUnits, unitId];
-  const stars = now.stars + (alreadyCleared ? Math.max(1, Math.floor(starsEarned / 2)) : starsEarned);
-  const hearts = now.hearts + heartsEarned;
+  const stars = alreadyCleared ? now.stars : now.stars + starsEarned;
+  const hearts = alreadyCleared ? now.hearts : now.hearts + heartsEarned;
   saveProgress(profile, withDailyPractice({ ...now, clearedUnits, stars, hearts }));
 }

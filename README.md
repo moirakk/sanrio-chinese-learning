@@ -8,14 +8,15 @@ A private, family-focused Chinese learning web app for two children. It uses a c
 
 - 15 lesson units across three chapters
 - Pinyin, hanzi, and short conversation practice
-- Unit unlock progression for two profiles: May and Yuna
-- Clear May/Yuna learning spaces with separate local progress
+- Unit unlock progression for two learner profiles
+- Clear learner spaces with separate local progress
 - Missed-question review queue for targeted practice
 - Mini games: memory, tone, puzzle, hunt, fill-in-the-blank, and word order
 - Two-player challenge mode
 - Parent progress page for checking both learners at once
 - "My Room" progress dashboard, learned words, message board, and save/load
 - Browser-based Mandarin and Japanese speech playback
+- Search indexing discouraged through page metadata for privacy
 
 ## Tech Stack
 
