@@ -1,8 +1,12 @@
-# Sanrio Chinese Learning
+# ことばランド
+
+[![Deploy to GitHub Pages](https://github.com/moirakk/sanrio-chinese-learning/actions/workflows/deploy.yml/badge.svg)](https://github.com/moirakk/sanrio-chinese-learning/actions/workflows/deploy.yml)
 
 A private, family-focused language learning web app for two children. It uses Japanese prompts to help them practice Chinese and English side by side with cute character-inspired visuals, short lessons, browser speech playback, and small games.
 
 > This is a personal learning project. The character-inspired artwork and naming should be treated as private/family use unless the branding and assets are reviewed for public distribution.
+
+Live site: [yunawithmay.site](https://yunawithmay.site/)
 
 ## What It Includes
 
@@ -27,7 +31,6 @@ A private, family-focused language learning web app for two children. It uses Ja
 - Vite
 - React Router
 - Tailwind CSS
-- Framer Motion
 - Lucide React
 - Oxlint
 

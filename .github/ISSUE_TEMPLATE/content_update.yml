@@ -1,5 +1,5 @@
 name: Content Update
-description: Request a lesson, phrase, pinyin, or hanzi change.
+description: Request a lesson, phrase, pinyin, Chinese, or English content change.
 title: "[Content]: "
 labels: ["content"]
 body:
@@ -14,7 +14,7 @@ body:
     id: change
     attributes:
       label: Requested change
-      placeholder: Replace the example sentence with something easier.
+      placeholder: Replace the Chinese or English example sentence with something easier.
     validations:
       required: true
   - type: textarea

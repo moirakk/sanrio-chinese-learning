@@ -17,6 +17,8 @@ Before opening a pull request or merging changes, run:
 npm run verify
 ```
 
+For lesson-only edits, `npm run content:check` is the fastest first check.
+
 ## Manual QA
 
 After gameplay changes, check:
@@ -33,4 +35,5 @@ After gameplay changes, check:
 - Use short, child-friendly sentences.
 - Keep Japanese explanations warm and direct.
 - Keep Mandarin examples practical for daily use.
+- Keep English phrases aligned with the Chinese lesson theme.
 - Prefer small additions over large rewrites.

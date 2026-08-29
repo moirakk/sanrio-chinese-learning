@@ -14,6 +14,7 @@ Use this checklist when preparing a meaningful update.
 - Review changed files.
 - Confirm no generated build output is staged.
 - Confirm no local progress JSON files are staged.
+- Confirm unused dependencies were removed from `package.json`.
 - Update `CHANGELOG.md` for user-visible changes.
 
 ## Before Push

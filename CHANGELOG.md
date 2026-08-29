@@ -10,6 +10,7 @@ All notable changes to this family learning app will be documented here.
 - Added parent-set daily unit assignments and a mini weekly summary.
 - Added printable learned-word and phrase cards in My Room.
 - Added Japanese answer hints after missed game questions.
+- Removed unused dependencies and inactive UI components to keep the repository smaller.
 - Removed unused legacy lesson data files and Vite template assets.
 - Updated the GitHub Pages artifact upload action to the current major version.
 - Added safer fallbacks for profile selection, progress data, speech speed, and the local message board.
