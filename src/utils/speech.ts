@@ -1,3 +1,5 @@
+import type { SpeechLang } from '../types';
+
 const RATE_KEY = 'sanrio_speech_rate';
 const DEFAULT_RATE = 0.6;
 
@@ -22,7 +24,7 @@ export function setSpeechRate(rate: number): void {
   }
 }
 
-function pickVoice(lang: 'zh-CN' | 'ja-JP'): SpeechSynthesisVoice | undefined {
+function pickVoice(lang: SpeechLang): SpeechSynthesisVoice | undefined {
   const voices = window.speechSynthesis.getVoices();
   if (!voices.length) return undefined;
 
@@ -37,6 +39,9 @@ function pickVoice(lang: 'zh-CN' | 'ja-JP'): SpeechSynthesisVoice | undefined {
   if (lang === 'ja-JP') {
     return voices.find((v) => v.lang === 'ja-JP') || voices.find((v) => v.lang.startsWith('ja'));
   }
+  if (lang === 'en-US') {
+    return voices.find((v) => v.lang === 'en-US') || voices.find((v) => v.lang.startsWith('en'));
+  }
   return undefined;
 }
 
@@ -46,7 +51,7 @@ export interface SpeakOptions {
   onError?: () => void;
 }
 
-export function speak(text: string, lang: 'zh-CN' | 'ja-JP', options?: SpeakOptions): void {
+export function speak(text: string, lang: SpeechLang, options?: SpeakOptions): void {
   if (typeof window === 'undefined' || !window.speechSynthesis || !text.trim()) {
     options?.onEnd?.();
     return;

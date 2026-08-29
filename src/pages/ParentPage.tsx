@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, CalendarDays, Heart, Trophy } from 'lucide-react';
 import Layout from '../components/Layout';
 import { PROFILE_META, type Profile } from '../hooks/useProfile';
-import { units } from '../data/units';
+import { getUnitTitleEn, units } from '../data/units';
 import { getActiveReviewItems, getProgress, getScheduledReviewItems } from '../utils/storage';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
 
@@ -15,7 +15,7 @@ function nextUnitFor(profile: Profile) {
 
 export default function ParentPage() {
   return (
-    <Layout title="保護者チェック" subtitle="May と Yuna の進み具合">
+    <Layout title="保護者チェック" subtitle="中国語と英語の進み具合">
       <div className="space-y-6">
         <section className="grid gap-5 md:grid-cols-2">
           {profiles.map((profile) => {
@@ -73,7 +73,7 @@ export default function ParentPage() {
                 <div className="mt-5 rounded-2xl border border-slate-100 bg-white p-4">
                   <p className="text-xs font-black text-slate-400">次におすすめ</p>
                   <p className="mt-1 text-lg font-black text-slate-800">ユニット {nextUnit.id}：{nextUnit.titleJa}</p>
-                  <p className="text-sm font-bold text-slate-500">{nextUnit.titleZh}</p>
+                  <p className="text-sm font-bold text-slate-500">{nextUnit.titleZh} / {getUnitTitleEn(nextUnit.id)}</p>
                   <Link to={`/unit/${nextUnit.id}`} className={`mt-3 inline-flex rounded-xl px-4 py-2 text-sm font-black text-white ${tone === 'rose' ? 'bg-rose-500' : 'bg-violet-500'}`}>
                     開く
                   </Link>
@@ -102,8 +102,8 @@ export default function ParentPage() {
               return (
                 <div key={`${profile}-memo`} className="rounded-2xl bg-slate-50 p-4">
                   <p className="mb-2 font-black text-slate-700">{meta.label}</p>
-                  <p className="text-sm font-bold text-slate-500">覚えた漢字：{progress.learnedKanji.slice(-8).join('、') || 'まだありません'}</p>
-                  <p className="mt-2 text-sm font-bold text-slate-500">フレーズ：{progress.learnedPhrases.slice(-3).join(' / ') || 'まだありません'}</p>
+                  <p className="text-sm font-bold text-slate-500">覚えたことば：{progress.learnedKanji.slice(-8).join('、') || 'まだありません'}</p>
+                  <p className="mt-2 text-sm font-bold text-slate-500">フレーズ：{progress.learnedPhrases.slice(-4).join(' / ') || 'まだありません'}</p>
                 </div>
               );
             })}

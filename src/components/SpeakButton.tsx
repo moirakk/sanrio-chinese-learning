@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { speak, getSpeechRate } from '../utils/speech';
+import type { SpeechLang } from '../types';
 
 interface SpeakButtonProps {
   text: string;
-  lang: 'zh-CN' | 'ja-JP';
+  lang: SpeechLang;
   /** Override current rate preference (optional) */
   rate?: number;
   className?: string;

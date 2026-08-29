@@ -1,14 +1,23 @@
 import { useState } from 'react';
 import { Check, Mic, RotateCcw, Volume2 } from 'lucide-react';
 import { getSpeechRate, speak } from '../utils/speech';
+import type { SpeechLang } from '../types';
 
 type Step = 'listen' | 'speak' | 'repeat' | 'done';
 
-export default function ShadowPractice({ text }: { text: string }) {
+export default function ShadowPractice({
+  text,
+  lang = 'zh-CN',
+  label = 'まねして言ってみよう',
+}: {
+  text: string;
+  lang?: SpeechLang;
+  label?: string;
+}) {
   const [step, setStep] = useState<Step>('listen');
 
   const play = (next: Step) => {
-    speak(text, 'zh-CN', {
+    speak(text, lang, {
       rate: getSpeechRate(),
       onEnd: () => setStep(next),
       onError: () => setStep(next),
@@ -18,7 +27,7 @@ export default function ShadowPractice({ text }: { text: string }) {
   return (
     <div className="mt-3 rounded-2xl border border-sky-100 bg-sky-50 p-3">
       <div className="mb-2 flex items-center justify-between gap-3">
-        <p className="text-xs font-black text-sky-600">まねして言ってみよう</p>
+        <p className="text-xs font-black text-sky-600">{label}</p>
         {step === 'done' ? <span className="text-xs font-black text-emerald-600">できた！</span> : null}
       </div>
       <div className="grid grid-cols-3 gap-2">

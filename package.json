@@ -2,7 +2,7 @@
   "name": "sanrio-chinese-learning",
   "private": true,
   "version": "0.1.0",
-  "description": "A private family Chinese learning app for May and Yuna.",
+  "description": "A private family app for learning Chinese and English through Japanese prompts.",
   "type": "module",
   "homepage": "https://yunawithmay.site",
   "repository": {
@@ -18,7 +18,8 @@
     "typecheck": "tsc -b",
     "lint": "oxlint",
     "preview": "vite preview",
-    "verify": "npm run lint && npm run build"
+    "verify": "npm run lint && npm run content:check && npm run build",
+    "content:check": "node scripts/verify-content.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

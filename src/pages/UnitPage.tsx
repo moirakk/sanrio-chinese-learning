@@ -26,7 +26,7 @@ import { getUnit, units } from '../data/units';
 import { clearUnit, isUnitUnlocked, recordReviewMiss, updateLearned } from '../utils/storage';
 import { speak } from '../utils/speech';
 import { useProfile } from '../hooks/useProfile';
-import type { ConversationItem, KanjiItem, PinyinItem, Question, QuestionKind } from '../types';
+import type { ConversationItem, KanjiItem, PinyinItem, Question, QuestionKind, SpeechLang } from '../types';
 import {
   CinnamorollGuide,
   KittyGuide,
@@ -62,6 +62,7 @@ function toneOf(py: string): '1' | '2' | '3' | '4' {
 
 /** Extract Chinese text from a game question to auto-read aloud */
 function getAutoReadText(q: Question): string {
+  if (q.readText) return q.readText;
   switch (q.kind) {
     case 'fill': {
       // prompt: "Speaker: 你好 （___）\n(日本語)" — take first line, strip speaker label and blank
@@ -93,6 +94,10 @@ function getAutoReadText(q: Question): string {
   }
 }
 
+function getAutoReadLang(q: Question): SpeechLang {
+  return q.readLang ?? 'zh-CN';
+}
+
 function guideByKey(keyName: string) {
   if (keyName === 'kitty') return <KittyGuide className="w-20 h-20 animate-bob" />;
   if (keyName === 'melody') return <MelodyGuide className="w-20 h-20 animate-bob" />;
@@ -111,7 +116,7 @@ function buildScope(unitId: number) {
 }
 
 function buildToneQuestions(kanji: KanjiItem[], total: number): Question[] {
-  const source = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
+  const source = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', en: 'I / me', strokes: 7, difficulty: 1 }];
   const out: Question[] = [];
   for (let i = 0; i < total; i += 1) {
     const k = source[i % source.length];
@@ -121,6 +126,8 @@ function buildToneQuestions(kanji: KanjiItem[], total: number): Question[] {
       prompt: `${k.hanzi}（${normalizePinyin(k.pinyin)}）は何声？`,
       options: ['1', '2', '3', '4'],
       answer: ans,
+      readText: k.hanzi,
+      readLang: 'zh-CN',
     });
   }
   return shuffle(out);
@@ -129,17 +136,29 @@ function buildToneQuestions(kanji: KanjiItem[], total: number): Question[] {
 function buildPuzzleQuestions(kanji: KanjiItem[], total: number): Question[] {
   const out: Question[] = [];
   if (!kanji.length) return out;
-  const fillers = kanji.map((k) => k.ja);
   for (let i = 0; i < total; i++) {
     const t = kanji[i % kanji.length];
-    
-    // Attempt to match with similarKanji meaning if possible, else random
-    // But similarKanji are hanzi strings. We just provide 4 options of ja meanings.
-    let wrong = kanji.filter((k) => k.hanzi !== t.hanzi).map((k) => k.ja);
-    wrong = wrong.slice(0, 3);
-    while (wrong.length < 3) wrong.push(fillers[Math.floor(Math.random() * fillers.length)] || 'ダミー');
-    
-    out.push({ kind: 'puzzle', prompt: `「${t.hanzi}」の意味は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja });
+    if (i % 2 === 0) {
+      const wrong = takeRandom(kanji.filter((k) => k.hanzi !== t.hanzi), 3).map((k) => k.hanzi);
+      out.push({
+        kind: 'puzzle',
+        prompt: `${t.ja} の中国語は？`,
+        options: shuffle(Array.from(new Set([t.hanzi, ...wrong]))),
+        answer: t.hanzi,
+        readText: t.hanzi,
+        readLang: 'zh-CN',
+      });
+    } else {
+      const wrong = takeRandom(kanji.filter((k) => k.en !== t.en), 3).map((k) => k.en);
+      out.push({
+        kind: 'puzzle',
+        prompt: `${t.ja} の英語は？`,
+        options: shuffle(Array.from(new Set([t.en, ...wrong]))),
+        answer: t.en,
+        readText: t.en,
+        readLang: 'en-US',
+      });
+    }
   }
   return out;
 }
@@ -156,9 +175,11 @@ function buildHuntQuestions(kanji: KanjiItem[], total: number): Question[] {
     ).map((x) => x.hanzi);
     out.push({
       kind: 'hunt',
-      prompt: `${t.ja} / ${normalizePinyin(t.pinyin)} を探して！`,
+      prompt: `${t.ja} / ${t.en} / ${normalizePinyin(t.pinyin)} を探して！`,
       options: shuffle([t.hanzi, ...wrong]).slice(0, 12),
       answer: t.hanzi,
+      readText: t.hanzi,
+      readLang: 'zh-CN',
     });
   }
   return out;
@@ -170,39 +191,52 @@ function buildFillQuestions(conversation: ConversationItem[], total: number): Qu
   
   for (let i = 0; i < total; i++) {
     const line = conversation[i % conversation.length];
-    
-    const parts = line.zh.split(' ');
+    const useEnglish = i % 2 === 1;
+    const targetText = useEnglish ? line.en : line.zh;
+    const parts = targetText.split(' ');
     if (parts.length < 2) {
-      out.push({ kind: 'fill', prompt: line.ja, options: shuffle([line.zh, '你好', '谢谢', '对不起']), answer: line.zh });
+      const fallbackOptions = useEnglish ? [targetText, 'Hello!', 'Thank you!', 'Sorry!'] : [targetText, '你好', '谢谢', '对不起'];
+      out.push({ kind: 'fill', prompt: line.ja, options: shuffle(fallbackOptions), answer: targetText, readText: targetText, readLang: useEnglish ? 'en-US' : 'zh-CN' });
       continue;
     }
     
     const hideIndex = Math.floor(Math.random() * parts.length);
     const hiddenWord = parts[hideIndex];
     const promptText = parts.map((p, idx) => idx === hideIndex ? '（___）' : p).join(' ');
-    const displayPrompt = `${line.speaker ? line.speaker + ': ' : ''}${promptText}
+    const displayPrompt = `${useEnglish ? '英語' : '中国語'}: ${line.speaker ? line.speaker + ': ' : ''}${promptText}
 (${line.ja})`;
 
-    const allWords = conversation.flatMap(c => c.zh.split(' '));
+    const allWords = conversation.flatMap(c => (useEnglish ? c.en : c.zh).split(' '));
     let wrong = allWords.filter(w => w !== hiddenWord);
     wrong = shuffle(Array.from(new Set(wrong))).slice(0, 3);
-    while (wrong.length < 3) wrong.push('的');
+    while (wrong.length < 3) wrong.push(useEnglish ? 'the' : '的');
 
-    out.push({ kind: 'fill', prompt: displayPrompt, options: shuffle([hiddenWord, ...wrong]), answer: hiddenWord });
+    out.push({
+      kind: 'fill',
+      prompt: displayPrompt,
+      options: shuffle([hiddenWord, ...wrong]),
+      answer: hiddenWord,
+      readText: targetText,
+      readLang: useEnglish ? 'en-US' : 'zh-CN',
+    });
   }
   return out;
 }
 
 function buildOrderQuestions(conversation: ConversationItem[], total: number): Question[] {
-  const source = conversation.length > 0 ? conversation : [{ id: 'f', scene: '', zh: '我 是 学生。', ja: '私は学生です。', difficulty: 1, keywords: [] }];
+  const source = conversation.length > 0 ? conversation : [{ id: 'f', scene: '', zh: '我 是 学生。', en: 'I am a student.', ja: '私は学生です。', difficulty: 1, keywords: [] }];
   const out: Question[] = [];
   for (let i = 0; i < total; i += 1) {
     const line = source[i % source.length];
+    const useEnglish = i % 2 === 1;
+    const answer = useEnglish ? line.en : line.zh;
     out.push({
       kind: 'order',
-      prompt: line.ja,
-      options: shuffle(line.zh.split(' ').filter(Boolean)),
-      answer: line.zh,
+      prompt: `${line.ja} を${useEnglish ? '英語' : '中国語'}でならべよう`,
+      options: shuffle(answer.split(' ').filter(Boolean)),
+      answer,
+      readText: answer,
+      readLang: useEnglish ? 'en-US' : 'zh-CN',
     });
   }
   return out;
@@ -211,16 +245,20 @@ function buildOrderQuestions(conversation: ConversationItem[], total: number): Q
 function buildMatchQuestions(pinyin: PinyinItem[], kanji: KanjiItem[], total: number): Question[] {
   const out: Question[] = [];
   const py = pinyin.length > 0 ? pinyin : [{ value: 'a', kana: 'ア', tipJa: '', difficulty: 1 }];
-  const kz = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', strokes: 7, difficulty: 1 }];
+  const kz = kanji.length > 0 ? kanji : [{ hanzi: '我', pinyin: 'wo3', ja: 'わたし', en: 'I / me', strokes: 7, difficulty: 1 }];
   for (let i = 0; i < total; i += 1) {
-    if (i % 2 === 0) {
+    if (i % 3 === 0) {
       const t = py[i % py.length];
       const wrong = takeRandom(py.filter((x) => x.value !== t.value), 3).map((x) => x.kana);
       out.push({ kind: 'match', prompt: `${t.value} の読みは？`, options: shuffle([t.kana, ...wrong]), answer: t.kana });
-    } else {
+    } else if (i % 3 === 1) {
       const t = kz[i % kz.length];
       const wrong = takeRandom(kz.filter((x) => x.hanzi !== t.hanzi), 3).map((x) => x.ja);
-      out.push({ kind: 'match', prompt: `${t.hanzi} の意味は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja });
+      out.push({ kind: 'match', prompt: `${t.hanzi} の日本語は？`, options: shuffle([t.ja, ...wrong]), answer: t.ja, readText: t.hanzi, readLang: 'zh-CN' });
+    } else {
+      const t = kz[i % kz.length];
+      const wrong = takeRandom(kz.filter((x) => x.en !== t.en), 3).map((x) => x.en);
+      out.push({ kind: 'match', prompt: `${t.ja} の英語は？`, options: shuffle([t.en, ...wrong]), answer: t.en, readText: t.en, readLang: 'en-US' });
     }
   }
   return shuffle(out);
@@ -235,7 +273,11 @@ function buildMemoryRound(pinyin: PinyinItem[], kanji: KanjiItem[]): MemoryCard[
     { key: `k-${i}-a`, text: x.hanzi, pair: x.ja },
     { key: `k-${i}-b`, text: x.ja, pair: x.hanzi },
   ]);
-  const allPairs = [...pyPairs, ...kzPairs];
+  const enPairs = kanji.map((x, i) => [
+    { key: `e-${i}-a`, text: x.en, pair: x.ja },
+    { key: `e-${i}-b`, text: x.ja, pair: x.en },
+  ]);
+  const allPairs = [...pyPairs, ...kzPairs, ...enPairs];
   const pairCount = Math.max(4, Math.min(6, allPairs.length)); // 8-12 cards
   return shuffle(takeRandom(allPairs, pairCount).flat());
 }
@@ -328,7 +370,7 @@ export default function UnitPage() {
     setPhase('result');
     if (pass && unit) {
       clearUnit(profile, unit.id, unit.stars * 3, 1);
-      updateLearned(profile, kanji.map((x) => x.hanzi), conversation.map((x) => x.zh));
+      updateLearned(profile, kanji.map((x) => x.hanzi), conversation.flatMap((x) => [x.zh, x.en]));
     }
   }, [conversation, kanji, passRate, profile, totalQuestions, unit]);
 
@@ -390,12 +432,12 @@ export default function UnitPage() {
     }
   }, [phase, baseGameKind, memoryDeck.length, pinyin, kanji]);
 
-  // Auto-read Chinese content when a new game question appears
+  // Auto-read target-language content when a new game question appears.
   useEffect(() => {
     if (phase !== 'game' || !current) return;
     const text = getAutoReadText(current);
     if (text) {
-      speak(text, 'zh-CN');
+      speak(text, getAutoReadLang(current));
     }
   }, [phase, index, current]);
 
@@ -419,7 +461,7 @@ export default function UnitPage() {
   }
 
   return (
-    <Layout title={`ユニット ${unit.id}：${unit.titleJa}`} subtitle={`${unit.titleZh} • ${unit.isTest ? 'テスト' : '学習'} • ⭐${unit.stars}`}>
+    <Layout title={`ユニット ${unit.id}：${unit.titleJa}`} subtitle={`${unit.titleZh} / ${unit.conversation[0]?.en ?? 'English'} • ${unit.isTest ? 'テスト' : '学習'} • ⭐${unit.stars}`}>
       <div className="space-y-6">
         <section className="rounded-[2rem] border border-white/80 bg-white/85 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-6 flex items-center gap-4">
           {guideByKey(unit.guide)}
@@ -434,8 +476,8 @@ export default function UnitPage() {
         {phase === 'learn' && (
           <div className="grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/80 bg-white/80 p-2 shadow-sm">
             {[
-              { id: 'pinyin', label: '拼音' },
-              { id: 'kanji', label: '漢字' },
+              { id: 'pinyin', label: '音' },
+              { id: 'kanji', label: 'ことば' },
               { id: 'conversation', label: '会話' },
             ].map((step) => (
               <button
@@ -454,7 +496,7 @@ export default function UnitPage() {
 
         <section className="space-y-6">
           {phase === 'learn' && learnStep === 'pinyin' && <section className="rounded-[2rem] bg-white/85 border border-rose-100 p-4 md:p-6 card-shadow">
-            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-pink-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-pink-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-pink-200">一緒に発音してみよう！</div></div><h3 className="text-xl font-black text-pink-600 mb-4">拼音コーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-pink-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-pink-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-pink-200">日本語のヒントで、中国語の音を聞こう！</div></div><h3 className="text-xl font-black text-pink-600 mb-4">中国語の音</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {pinyin.map((item) => (
                 <div key={`${item.value}-${item.kana}`} className="rounded-2xl bg-white border-2 border-pink-200 p-4 text-center btn-3d">
@@ -463,12 +505,13 @@ export default function UnitPage() {
                     <SpeakButton text={PINYIN_CHAR_MAP[item.value] ?? item.value} lang="zh-CN" />
                   </div>
                   <p className="text-sm font-bold text-slate-500 mt-2">{item.kana}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">{item.hint}</p>
                 </div>
               ))}
             </div>
           </section>}
           {phase === 'learn' && learnStep === 'kanji' && <section className="rounded-[2rem] bg-white/85 border border-sky-100 p-4 md:p-6 card-shadow">
-            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-blue-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-blue-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-blue-200">新しい漢字を覚えよう！</div></div><h3 className="text-xl font-black text-blue-600 mb-4">漢字コーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-blue-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-blue-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-blue-200">日本語を見て、中国語と英語をセットで覚えよう！</div></div><h3 className="text-xl font-black text-blue-600 mb-4">ことばコーナー</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {kanji.map((item) => (
                 <div key={`${item.hanzi}-${item.pinyin}`} className="rounded-2xl bg-white border-2 border-blue-200 p-4 text-center btn-3d">
@@ -476,26 +519,40 @@ export default function UnitPage() {
                     <p className="text-4xl font-black text-slate-700">{item.hanzi}</p>
                     <SpeakButton text={item.hanzi} lang="zh-CN" />
                   </div>
-                  <p className="text-xs font-bold text-slate-500">{item.ja}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-400">{normalizePinyin(item.pinyin)} / {item.ja}</p>
+                  <div className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-sky-50 px-2 py-2">
+                    <span className="text-base font-black text-sky-700">{item.en}</span>
+                    <SpeakButton text={item.en} lang="en-US" />
+                  </div>
                 </div>
               ))}
             </div>
           </section>}
           {phase === 'learn' && learnStep === 'conversation' && <section className="rounded-[2rem] bg-white/85 border border-amber-100 p-4 md:p-6 card-shadow">
-            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-yellow-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-yellow-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-yellow-200">実際に使ってみよう！</div></div><h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
+            <div className="flex items-center gap-3 mb-4"><div className="w-12 h-12 bg-white rounded-full flex items-center justify-center p-1 border-2 border-yellow-200">{guideByKey(unit.guide)}</div><div className="bg-white px-4 py-2 rounded-2xl border-2 border-yellow-200 font-bold text-sm relative after:absolute after:right-full after:top-1/2 after:-translate-y-1/2 after:border-8 after:border-transparent after:border-r-yellow-200">同じ意味を、中国語と英語で言ってみよう！</div></div><h3 className="text-xl font-black text-yellow-700 mb-4">かいわコーナー</h3>
             <div className="space-y-3">
               {conversation.map((item, i) => (
                 <div key={item.id} className={`flex ${i % 2 === 0 ? 'justify-start' : 'justify-end'}`}>
                   <div className={`chat-bubble ${i % 2 === 0 ? 'left border border-yellow-200' : 'right border border-pink-200'} max-w-[90%]`}>
                     <div className="flex items-start gap-2">
                       <div className="flex-1">
-                        <p className="text-xl font-black text-slate-700">{item.zh}</p>
-                        <p className="text-xs font-bold text-slate-500 mt-1">{item.ja}</p>
-                        <ShadowPractice text={item.zh} />
-                      </div>
-                      <div className="flex flex-col gap-1 shrink-0 mt-1">
-                        <SpeakButton text={item.zh} lang="zh-CN" />
-                        <SpeakButton text={item.ja} lang="ja-JP" />
+                        <p className="text-xs font-black text-slate-400">{item.ja}</p>
+                        <div className="mt-2 flex items-start justify-between gap-2 rounded-xl bg-white/80 p-2">
+                          <div>
+                            <p className="text-[10px] font-black text-rose-400">中国語</p>
+                            <p className="text-xl font-black text-slate-700">{item.zh}</p>
+                          </div>
+                          <SpeakButton text={item.zh} lang="zh-CN" />
+                        </div>
+                        <div className="mt-2 flex items-start justify-between gap-2 rounded-xl bg-sky-50 p-2">
+                          <div>
+                            <p className="text-[10px] font-black text-sky-400">English</p>
+                            <p className="text-lg font-black text-sky-800">{item.en}</p>
+                          </div>
+                          <SpeakButton text={item.en} lang="en-US" />
+                        </div>
+                        <ShadowPractice text={item.zh} lang="zh-CN" label="中国語をまねして言う" />
+                        <ShadowPractice text={item.en} lang="en-US" label="英語をまねして言う" />
                       </div>
                     </div>
                   </div>
@@ -583,7 +640,7 @@ export default function UnitPage() {
                 <div className="flex items-start gap-2">
                   <p className="text-xl font-black text-slate-700 flex-1">{current.prompt}</p>
                   {getAutoReadText(current) && (
-                    <SpeakButton text={getAutoReadText(current)} lang="zh-CN" className="mt-1" />
+                    <SpeakButton text={getAutoReadText(current)} lang={getAutoReadLang(current)} className="mt-1" />
                   )}
                 </div>
                 {(current.kind === 'hunt') && <p className="text-sm font-bold text-slate-500">残り時間: {timeLeft}秒</p>}
@@ -653,10 +710,10 @@ export default function UnitPage() {
 
             <div className="my-6 grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl bg-rose-50 p-4 text-left">
-                <p className="text-xs font-black text-rose-400">今日覚えた漢字</p>
+                <p className="text-xs font-black text-rose-400">今日覚えたことば</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {unit.kanji.slice(0, 8).map((k: KanjiItem) => (
-                    <span key={k.hanzi} className="rounded-xl bg-white px-3 py-2 text-2xl font-black text-slate-800 shadow-sm">{k.hanzi}</span>
+                    <span key={k.hanzi} className="rounded-xl bg-white px-3 py-2 text-sm font-black text-slate-800 shadow-sm">{k.hanzi} / {k.en}</span>
                   ))}
                 </div>
               </div>
@@ -664,7 +721,7 @@ export default function UnitPage() {
                 <p className="text-xs font-black text-sky-400">言えるフレーズ</p>
                 <div className="mt-3 space-y-2">
                   {unit.conversation.slice(0, 3).map((line) => (
-                    <p key={line.id} className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm">{line.zh}</p>
+                    <p key={line.id} className="rounded-xl bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm">{line.zh}<br /><span className="text-sky-600">{line.en}</span></p>
                   ))}
                 </div>
               </div>

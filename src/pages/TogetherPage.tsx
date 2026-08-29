@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
-import { units, getUnit } from '../data/units';
+import { getUnitTitleEn, units, getUnit } from '../data/units';
 import { isUnitUnlocked } from '../utils/storage';
 
 export default function TogetherPage() {
@@ -25,11 +25,9 @@ export default function TogetherPage() {
   const startGame = (unitId: number) => {
     
     
-    // Generate 10 random questions from the unit
     const unit = getUnit(unitId)!;
     const qs = [];
     
-    // Simple question generator based on kanji/pinyin/conversation
     for(let i=0; i<10; i++) {
       const type = Math.random();
       if (type < 0.33 && unit.pinyin.length >= 2) {
@@ -42,24 +40,25 @@ export default function TogetherPage() {
         });
       } else if (type < 0.66 && unit.kanji.length >= 2) {
         const target = unit.kanji[Math.floor(Math.random() * unit.kanji.length)];
-        const others = unit.kanji.filter(k => k.char !== target.char).slice(0, 3);
+        const practiceEnglish = i % 2 === 1;
+        const others = unit.kanji.filter(k => practiceEnglish ? k.en !== target.en : k.char !== target.char).slice(0, 3);
         qs.push({
-          q: target.char,
-          options: [target.ja, ...others.map(o => o.ja)].sort(() => Math.random() - 0.5),
-          answer: target.ja
+          q: `${target.ja} の${practiceEnglish ? '英語' : '中国語'}`,
+          options: [practiceEnglish ? target.en : target.char, ...others.map(o => practiceEnglish ? o.en : o.char)].sort(() => Math.random() - 0.5),
+          answer: practiceEnglish ? target.en : target.char
         });
       } else if (unit.conversation.length >= 2) {
         const target = unit.conversation[Math.floor(Math.random() * unit.conversation.length)];
-        const others = unit.conversation.filter(c => c.zh !== target.zh).slice(0, 3);
+        const practiceEnglish = i % 2 === 1;
+        const others = unit.conversation.filter(c => practiceEnglish ? c.en !== target.en : c.zh !== target.zh).slice(0, 3);
         qs.push({
-          q: target.ja,
-          options: [target.zh, ...others.map(o => o.zh)].sort(() => Math.random() - 0.5),
-          answer: target.zh
+          q: `${target.ja} を${practiceEnglish ? '英語' : '中国語'}で`,
+          options: [practiceEnglish ? target.en : target.zh, ...others.map(o => practiceEnglish ? o.en : o.zh)].sort(() => Math.random() - 0.5),
+          answer: practiceEnglish ? target.en : target.zh
         });
       } else {
-        // Fallback
-        const target = unit.kanji[0] || { char: '好', ja: 'よい' };
-        qs.push({ q: target.char, options: [target.ja, 'わるい', '大きい', '小さい'], answer: target.ja });
+        const target = unit.kanji[0] || { char: '好', ja: 'よい', en: 'good' };
+        qs.push({ q: target.ja, options: [target.en, 'bad', 'big', 'small'], answer: target.en });
       }
     }
     
@@ -96,7 +95,7 @@ export default function TogetherPage() {
   };
 
   return (
-    <Layout title="ふたりでチャレンジ！" subtitle="May と Yuna で一緒にあそぼう">
+    <Layout title="ふたりでチャレンジ！" subtitle="中国語と英語を一緒にあそぼう">
       {step === 'select' && (
         <div className="flex flex-col items-center">
           <div className="flex gap-4 mb-8">
@@ -116,8 +115,8 @@ export default function TogetherPage() {
                   {u.id}
                 </div>
                 <div>
-                  <div className="font-black text-slate-700">{u.titleZh}</div>
-                  <div className="text-sm font-bold text-slate-500">{u.titleJa}</div>
+                  <div className="font-black text-slate-700">{u.titleJa}</div>
+                  <div className="text-sm font-bold text-slate-500">{u.titleZh} / {getUnitTitleEn(u.id)}</div>
                 </div>
               </button>
             ))}

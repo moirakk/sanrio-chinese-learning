@@ -4,11 +4,9 @@ type ProgressState = {
   stars: number;
   hearts: number;
   badges: string[];
-  clearedGames: string[];
   clearedUnits: number[];
   learnedKanji: string[];
   learnedPhrases: string[];
-  unlockedCharacters: string[];
   reviewItems: ReviewItem[];
   lastPracticeDate?: string;
   streakDays?: number;
@@ -33,11 +31,9 @@ function defaultProgress(): ProgressState {
     stars: 0,
     hearts: 0,
     badges: [],
-    clearedGames: [],
     clearedUnits: [],
     learnedKanji: [],
     learnedPhrases: [],
-    unlockedCharacters: ['Kitty風'],
     reviewItems: [],
     streakDays: 0,
   };
@@ -77,11 +73,9 @@ function normalizeProgress(value: unknown): ProgressState {
     stars: Number.isFinite(parsed.stars) ? parsed.stars as number : base.stars,
     hearts: Number.isFinite(parsed.hearts) ? parsed.hearts as number : base.hearts,
     badges: asStringArray(parsed.badges),
-    clearedGames: asStringArray(parsed.clearedGames),
     clearedUnits: asNumberArray(parsed.clearedUnits),
     learnedKanji: asStringArray(parsed.learnedKanji),
     learnedPhrases: asStringArray(parsed.learnedPhrases),
-    unlockedCharacters: asStringArray(parsed.unlockedCharacters).length ? asStringArray(parsed.unlockedCharacters) : base.unlockedCharacters,
     reviewItems: asReviewItems(parsed.reviewItems),
     lastPracticeDate: typeof parsed.lastPracticeDate === 'string' ? parsed.lastPracticeDate : undefined,
     streakDays: Number.isFinite(parsed.streakDays) ? parsed.streakDays as number : base.streakDays,
@@ -133,20 +127,6 @@ export function saveProgress(profile: Profile, next: ProgressState) {
   } catch {
     // Ignore storage failures so practice flow never crashes.
   }
-}
-
-export function addStars(profile: Profile, stars: number, hearts: number = 0) {
-  const now = getProgress(profile);
-  const updated = { ...now, stars: now.stars + stars, hearts: now.hearts + hearts };
-  saveProgress(profile, updated);
-}
-
-export function recordGameClear(profile: Profile, gameId: string, bonusStars = 3) {
-  const now = getProgress(profile);
-  const exists = now.clearedGames.includes(gameId);
-  const clearedGames = exists ? now.clearedGames : [...now.clearedGames, gameId];
-  const stars = exists ? now.stars : now.stars + bonusStars;
-  saveProgress(profile, { ...now, clearedGames, stars });
 }
 
 export function updateLearned(profile: Profile, kanji: string[], phrases: string[]) {

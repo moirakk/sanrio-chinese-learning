@@ -1,13 +1,13 @@
 # Sanrio Chinese Learning
 
-A private, family-focused Chinese learning web app for two children. It uses a cute Sanrio-inspired visual style, short lessons, browser speech playback, and small games to make daily Mandarin practice feel light and repeatable.
+A private, family-focused language learning web app for two children. It uses Japanese prompts to help them practice Chinese and English side by side with cute character-inspired visuals, short lessons, browser speech playback, and small games.
 
 > This is a personal learning project. The character-inspired artwork and naming should be treated as private/family use unless the branding and assets are reviewed for public distribution.
 
 ## What It Includes
 
 - 15 lesson units across three chapters
-- Pinyin, hanzi, and short conversation practice
+- Pinyin, Chinese words, English words, and short conversation practice
 - Unit unlock progression for two learner profiles
 - Clear learner spaces with separate local progress
 - Missed-question review queue for targeted practice
@@ -15,7 +15,7 @@ A private, family-focused Chinese learning web app for two children. It uses a c
 - Two-player challenge mode
 - Parent progress page for checking both learners at once
 - "My Room" progress dashboard, learned words, message board, and save/load
-- Browser-based Mandarin and Japanese speech playback
+- Browser-based Mandarin, English, and Japanese speech playback
 - Search indexing discouraged through page metadata for privacy
 
 ## Tech Stack
@@ -55,6 +55,12 @@ Run code checks:
 npm run lint
 ```
 
+Check lesson content completeness:
+
+```bash
+npm run content:check
+```
+
 Run the full local verification:
 
 ```bash
@@ -73,7 +79,7 @@ npm run preview
 src/
   assets/          Character illustrations and app artwork
   components/      Shared UI pieces
-  data/            Lesson data
+  data/            Active lesson data
   hooks/           Profile and app state hooks
   pages/           Main app screens
   utils/           Storage and speech helpers
@@ -99,7 +105,7 @@ Important local storage keys:
 - `sanrio_messageboard`
 - `sanrio_speech_rate`
 
-Each profile stores its own cleared units, stars, streak count, learned words, and review queue inside its profile-specific progress key.
+Each profile stores its own cleared units, stars, streak count, learned words, learned phrases, and review queue inside its profile-specific progress key.
 
 The "My Room" page includes JSON save/load controls so progress can be backed up manually.
 

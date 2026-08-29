@@ -17,11 +17,11 @@ const allCharacters = [
 ];
 
 const dailyQuotes = [
-  { zh: '天天向上！', ja: '日々向上しよう！' },
-  { zh: '你是最棒的！', ja: 'きみが一番だよ！' },
-  { zh: '加油，继续努力！', ja: 'がんばれ、その調子！' },
-  { zh: '熟能生巧', ja: '継続は力なり' },
-  { zh: '太厉害了！', ja: 'すごすぎる！' }
+  { zh: '天天向上！', en: 'Keep growing every day!', ja: '日々向上しよう！' },
+  { zh: '你是最棒的！', en: 'You are amazing!', ja: 'きみが一番だよ！' },
+  { zh: '加油，继续努力！', en: 'Keep going!', ja: 'がんばれ、その調子！' },
+  { zh: '熟能生巧', en: 'Practice makes perfect.', ja: '継続は力なり' },
+  { zh: '太厉害了！', en: 'That was awesome!', ja: 'すごすぎる！' }
 ];
 
 const stickersOptions = [
@@ -155,7 +155,7 @@ export default function MyRoomPage() {
   };
 
   return (
-    <Layout title="マイルーム" subtitle="Pochaccoと成長記録をチェック">
+    <Layout title="マイルーム" subtitle="ことばの成長記録をチェック">
       
       {/* Top Banner & Quote */}
       <section className="mb-8 rounded-3xl glass-panel p-5 flex flex-col md:flex-row items-center gap-4 relative overflow-hidden border-2 border-emerald-200">
@@ -165,6 +165,7 @@ export default function MyRoomPage() {
           <div>
             <p className="font-black text-emerald-700 text-lg mb-1">今日の一言 🌟</p>
             <p className="text-xl md:text-2xl font-black text-emerald-600 font-serif tracking-widest">{quote.zh}</p>
+            <p className="text-base font-black text-sky-600 mt-1">{quote.en}</p>
             <p className="text-sm font-bold text-slate-500 mt-1">{quote.ja}</p>
           </div>
         </div>
@@ -238,7 +239,7 @@ export default function MyRoomPage() {
         <section className="col-span-2 flex flex-col gap-6">
           <div className="bg-emerald-50 rounded-3xl p-6 card-shadow border-4 border-emerald-200 flex-1">
             <h3 className="mb-4 text-xl font-black text-emerald-600 flex items-center gap-2">
-              <span>📖</span> 覚えた漢字アルバム
+              <span>📖</span> 覚えたことばアルバム
             </h3>
             <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 snap-x px-1">
               {progress.learnedKanji.length > 0 ? (
@@ -249,7 +250,7 @@ export default function MyRoomPage() {
                 ))
               ) : (
                 <div className="w-full py-8 text-center text-emerald-500 font-bold bg-white/50 rounded-2xl border-2 border-dashed border-emerald-300">
-                  まだ漢字を覚えていないよ。漢字アドベンチャーで遊ぼう！
+                  まだことばを覚えていないよ。レッスンで中国語と英語を集めよう！
                 </div>
               )}
             </div>

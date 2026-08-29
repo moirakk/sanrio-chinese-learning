@@ -50,7 +50,7 @@ Then manually check:
 - Unit 1 starts from a fresh browser.
 - Completing a unit updates progress.
 - The next unit unlocks.
-- Speech playback works on the intended device.
+- Mandarin and English speech playback works on the intended device.
 - Save/load still works from "My Room".
 
 ## After Deploying

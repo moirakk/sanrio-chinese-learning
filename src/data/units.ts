@@ -15,6 +15,7 @@ export interface KanjiItem {
   hanzi: string;
   pinyin: string;
   ja: string;
+  en: string;
   strokes: number;
   difficulty: 1 | 2 | 3;
   char: string;
@@ -26,6 +27,7 @@ export interface ConversationItem {
   id: string;
   scene: string;
   zh: string;
+  en: string;
   ja: string;
   difficulty: 1 | 2 | 3;
   keywords: string[];
@@ -48,8 +50,171 @@ export interface Unit {
 }
 
 const p = (value: string, kana: string, tipJa: string, difficulty: 1 | 2 | 3, hint: string, examples: string): PinyinItem => ({ value, kana, tipJa, difficulty, letter: value, hint, examples });
-const k = (hanzi: string, pinyin: string, ja: string, strokes: number, difficulty: 1 | 2 | 3, radical: string, mnemonicJa: string): KanjiItem => ({ hanzi, pinyin, ja, strokes, difficulty, char: hanzi, radical, mnemonicJa });
-const c = (id: string, scene: string, zh: string, ja: string, difficulty: 1 | 2 | 3, note?: string): ConversationItem => ({ id, scene, zh, ja, difficulty, keywords: [scene, zh, ja], note });
+const WORD_EN: Record<string, string> = {
+  你: 'you',
+  好: 'good',
+  我: 'I / me',
+  是: 'am / is / are',
+  叫: 'be called',
+  什: 'what',
+  么: 'question ending',
+  名: 'name',
+  字: 'character',
+  人: 'person',
+  日: 'day / sun',
+  本: 'origin / book',
+  中: 'middle / China',
+  国: 'country',
+  一: 'one',
+  二: 'two',
+  三: 'three',
+  四: 'four',
+  五: 'five',
+  六: 'six',
+  七: 'seven',
+  八: 'eight',
+  九: 'nine',
+  十: 'ten',
+  爸: 'dad',
+  妈: 'mom',
+  哥: 'older brother',
+  姐: 'older sister',
+  弟: 'younger brother',
+  妹: 'younger sister',
+  红: 'red',
+  黄: 'yellow',
+  蓝: 'blue',
+  绿: 'green',
+  白: 'white',
+  黑: 'black',
+  猫: 'cat',
+  狗: 'dog',
+  鸟: 'bird',
+  鱼: 'fish',
+  马: 'horse',
+  兔: 'rabbit',
+  吃: 'eat',
+  喝: 'drink',
+  饭: 'rice / meal',
+  菜: 'food / dish',
+  水: 'water',
+  茶: 'tea',
+  肉: 'meat',
+  蛋: 'egg',
+  天: 'sky / weather',
+  大: 'big',
+  小: 'small',
+  冷: 'cold',
+  热: 'hot',
+  雨: 'rain',
+  雪: 'snow',
+  买: 'buy',
+  多: 'many',
+  少: 'few / little',
+  钱: 'money',
+  贵: 'expensive',
+  要: 'want / need',
+  去: 'go',
+  在: 'be at',
+  哪: 'where / which',
+  里: 'inside',
+  左: 'left',
+  右: 'right',
+  前: 'front / before',
+  老: 'old',
+  师: 'teacher',
+  书: 'book',
+  写: 'write',
+  读: 'read',
+  学: 'study / learn',
+  校: 'school',
+};
+
+const PHRASE_EN: Record<string, string> = {
+  'u1-1': 'Hello!',
+  'u1-2': 'Hello, Yuna!',
+  'u1-3': 'Hello, May!',
+  'u1-4': 'Hello, everyone!',
+  'u2-1': 'Hello! What is your name?',
+  'u2-2': 'Hello! My name is May.',
+  'u2-3': 'Hello, May! My name is Yuna.',
+  'u2-4': 'Nice to meet you!',
+  'u3-1': 'Where are you from?',
+  'u3-2': 'I am Japanese.',
+  'u3-3': 'Is Yuna Chinese?',
+  'u3-4': 'No, I am Japanese.',
+  'u4-1': 'How old are you?',
+  'u4-2': 'I am nine years old.',
+  'u4-3': 'How old is Yuna?',
+  'u4-4': 'I am twelve years old.',
+  'u5-1': 'What is your name?',
+  'u5-2': 'My name is Yuna.',
+  'u5-3': 'Where are you from?',
+  'u5-4': 'I am Japanese.',
+  'u6-1': 'This is my mom.',
+  'u6-2': 'Do you have an older brother?',
+  'u6-3': 'Does Yuna have an older sister?',
+  'u6-4': 'No, I do not.',
+  'u7-1': 'What color do you like?',
+  'u7-2': 'I like pink.',
+  'u7-3': 'Does May like blue?',
+  'u7-4': 'I like red.',
+  'u8-1': 'What animal do you like?',
+  'u8-2': 'I like cats.',
+  'u8-3': 'Does Yuna like dogs?',
+  'u8-4': 'I like cats too.',
+  'u9-1': 'What do you want to eat?',
+  'u9-2': 'I want to eat rice.',
+  'u9-3': 'What does May want to drink?',
+  'u9-4': 'I want to drink tea.',
+  'u9-5': 'Delicious!',
+  'u10-1': 'Do you have an older brother?',
+  'u10-2': 'Yuna likes pink.',
+  'u10-3': 'I like cats.',
+  'u10-4': 'What does May want to eat?',
+  'u11-1': 'How is the weather today?',
+  'u11-2': 'It is very hot today.',
+  'u11-3': 'Yuna, will it be cold tomorrow?',
+  'u11-4': 'It will rain tomorrow.',
+  'u12-1': 'How much is this?',
+  'u12-2': 'Too expensive!',
+  'u12-3': 'A little cheaper, please.',
+  'u12-4': 'What does May want to buy?',
+  'u13-1': 'Excuse me, where is the school?',
+  'u13-2': 'Go left.',
+  'u13-3': 'Where is Yuna going?',
+  'u13-4': 'I am going to the shop.',
+  'u14-1': 'Hello, teacher!',
+  'u14-2': 'What is this?',
+  'u14-3': 'I do not understand.',
+  'u14-4': 'May, please read this.',
+  'u15-1': 'What is your name?',
+  'u15-2': 'My name is May.',
+  'u15-3': 'How much is this?',
+  'u15-4': 'Too expensive!',
+  'u15-5': 'Excuse me, where is the school?',
+};
+
+const UNIT_TITLE_EN: Record<number, string> = {
+  1: 'Hello!',
+  2: 'My Name Is...',
+  3: 'I Am Japanese',
+  4: 'How Old Are You?',
+  5: 'Chapter 1 Review',
+  6: 'Family',
+  7: 'Colors',
+  8: 'Animals',
+  9: 'Food',
+  10: 'Chapter 2 Review',
+  11: 'Weather',
+  12: 'Shopping',
+  13: 'Asking Directions',
+  14: 'At School',
+  15: 'Final Review',
+};
+
+const k = (hanzi: string, pinyin: string, ja: string, strokes: number, difficulty: 1 | 2 | 3, radical: string, mnemonicJa: string): KanjiItem => ({ hanzi, pinyin, ja, en: WORD_EN[hanzi] ?? ja, strokes, difficulty, char: hanzi, radical, mnemonicJa });
+const c = (id: string, scene: string, zh: string, ja: string, difficulty: 1 | 2 | 3, note?: string): ConversationItem => ({ id, scene, zh, en: PHRASE_EN[id] ?? ja, ja, difficulty, keywords: [scene, zh, PHRASE_EN[id] ?? ja, ja], note });
 
 export const units: Unit[] = [
   {
@@ -421,4 +586,7 @@ export const units: Unit[] = [
 export function getUnit(id: number): Unit | undefined {
   return units.find((u) => u.id === id);
 }
-// Content data augmentation complete
+
+export function getUnitTitleEn(id: number): string {
+  return UNIT_TITLE_EN[id] ?? 'English';
+}

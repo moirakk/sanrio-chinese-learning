@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BookOpen, Heart, Lock, Play, RotateCcw, Sparkles, Trophy, Users } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
-import { units } from '../data/units';
+import { getUnitTitleEn, units } from '../data/units';
 import { getActiveReviewItems, getProgress, isUnitUnlocked } from '../utils/storage';
 import {
   KittyGuide,
@@ -43,7 +43,7 @@ export default function Home() {
   const reviewCount = getActiveReviewItems(profile).length;
 
   return (
-    <Layout title="中国語ランド" subtitle={`${profileName}の今日の練習`}>
+    <Layout title="ことばランド" subtitle={`${profileName}の中国語と英語の練習`}>
       <div className="space-y-7">
         <section className="grid gap-4 md:grid-cols-2">
           <button
@@ -92,7 +92,7 @@ export default function Home() {
                 まずはユニット {nextUnit.id} から始めよう
               </h2>
               <p className="mt-2 text-base font-bold text-slate-500">
-                {nextUnit.titleJa} ・ {nextUnit.titleZh}
+                {nextUnit.titleJa} ・ {nextUnit.titleZh} ・ {getUnitTitleEn(nextUnit.id)}
               </p>
               <div className="mt-5 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -151,7 +151,7 @@ export default function Home() {
             <BookOpen className="h-6 w-6 text-rose-500" />
             <div>
               <p className="font-black text-slate-800">今日のレッスン</p>
-              <p className="text-sm font-bold text-slate-500">次のユニットへ</p>
+              <p className="text-sm font-bold text-slate-500">中国語と英語をセットで</p>
             </div>
             <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
           </Link>
@@ -206,7 +206,7 @@ export default function Home() {
                           <div>
                             <p className="text-xs font-black text-slate-400">ユニット {u.id}</p>
                             <p className="text-lg font-black text-slate-800">{u.titleJa}</p>
-                            <p className="text-sm font-bold text-slate-500">{u.titleZh}</p>
+                            <p className="text-sm font-bold text-slate-500">{u.titleZh} / {getUnitTitleEn(u.id)}</p>
                           </div>
                         </div>
                         {!unlocked ? <Lock className="h-5 w-5 text-slate-300" /> : null}

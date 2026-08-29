@@ -1,6 +1,6 @@
 # Security
 
-This app is a static family learning site. It does not have user accounts, a database, or a backend API.
+This app is a static family language learning site. It does not have user accounts, a database, or a backend API.
 
 ## Reporting
 

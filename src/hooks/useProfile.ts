@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
 export type Profile = 'sister12' | 'sister9';
-export type DifficultyLevel = 1 | 2 | 3;
 
 export interface ProfileMeta {
   id: Profile;
