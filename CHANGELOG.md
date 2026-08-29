@@ -7,6 +7,7 @@ All notable changes to this family learning app will be documented here.
 - Expanded lessons into Japanese-led Chinese and English practice.
 - Added a trilingual lesson content check to the local verification flow.
 - Removed unused legacy lesson data files and Vite template assets.
+- Updated the GitHub Pages artifact upload action to the current major version.
 - Added safer fallbacks for profile selection, progress data, speech speed, and the local message board.
 - Improved pinyin speech examples for whole-syllable and tone practice.
 - Changed two-player unit selection to use shared unlocked units instead of only shared completed units.
