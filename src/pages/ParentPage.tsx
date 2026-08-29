@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, CalendarDays, Heart, Trophy } from 'lucide-react';
+import { useState } from 'react';
+import { BookOpen, CalendarCheck, CalendarDays, Heart, Trophy } from 'lucide-react';
 import Layout from '../components/Layout';
 import { PROFILE_META, type Profile } from '../hooks/useProfile';
 import { getUnitTitleEn, units } from '../data/units';
-import { getActiveReviewItems, getProgress, getScheduledReviewItems } from '../utils/storage';
+import { clearDailyAssignment, getActiveReviewItems, getDailyAssignment, getProgress, getScheduledReviewItems, setDailyAssignment } from '../utils/storage';
 import { MelodyGuide, KuromiGuide } from '../assets/characters/characters';
 
 const profiles: Profile[] = ['sister9', 'sister12'];
@@ -14,6 +15,22 @@ function nextUnitFor(profile: Profile) {
 }
 
 export default function ParentPage() {
+  const [assignedUnits, setAssignedUnits] = useState<Record<Profile, number | undefined>>({
+    sister9: getDailyAssignment('sister9')?.unitId,
+    sister12: getDailyAssignment('sister12')?.unitId,
+  });
+
+  const updateAssignment = (profile: Profile, value: string) => {
+    const unitId = Number(value);
+    if (!unitId) {
+      clearDailyAssignment(profile);
+      setAssignedUnits((now) => ({ ...now, [profile]: undefined }));
+      return;
+    }
+    setDailyAssignment(profile, unitId);
+    setAssignedUnits((now) => ({ ...now, [profile]: unitId }));
+  };
+
   return (
     <Layout title="保護者チェック" subtitle="中国語と英語の進み具合">
       <div className="space-y-6">
@@ -25,6 +42,8 @@ export default function ParentPage() {
             const scheduledItems = getScheduledReviewItems(profile);
             const completionPct = Math.round((progress.clearedUnits.length / units.length) * 100);
             const nextUnit = nextUnitFor(profile);
+            const assignableUnits = units.filter((u) => !progress.clearedUnits.includes(u.id) && (u.id <= 1 || progress.clearedUnits.includes(u.id - 1)));
+            const assignedUnit = assignedUnits[profile] ? assignableUnits.find((u) => u.id === assignedUnits[profile]) : undefined;
             const Guide = profile === 'sister9' ? MelodyGuide : KuromiGuide;
             const tone = profile === 'sister9' ? 'rose' : 'violet';
 
@@ -79,6 +98,28 @@ export default function ParentPage() {
                   </Link>
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-slate-100 bg-white p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <CalendarCheck className={`h-5 w-5 ${tone === 'rose' ? 'text-rose-500' : 'text-violet-500'}`} />
+                    <p className="text-xs font-black text-slate-400">今日の指定</p>
+                  </div>
+                  <select
+                    value={assignedUnit?.id ?? ''}
+                    onChange={(event) => updateAssignment(profile, event.target.value)}
+                    className="w-full rounded-xl border-2 border-slate-100 bg-slate-50 px-3 py-2 text-sm font-black text-slate-700 outline-none focus:border-sky-200"
+                  >
+                    <option value="">自動おすすめにする</option>
+                    {assignableUnits.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        Unit {unit.id}: {unit.titleJa} / {getUnitTitleEn(unit.id)}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-xs font-bold text-slate-500">
+                    {assignedUnit ? `ホームでは Unit ${assignedUnit.id} を優先表示します。` : '未指定なら進み具合から自動で選びます。'}
+                  </p>
+                </div>
+
                 <div className={`mt-4 rounded-2xl p-4 ${reviewItems.length > 0 ? 'bg-amber-50' : 'bg-emerald-50'}`}>
                   <p className={`text-xs font-black ${reviewItems.length > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>今日のおすすめ</p>
                   <p className="mt-1 text-sm font-bold text-slate-600">
@@ -91,6 +132,32 @@ export default function ParentPage() {
               </article>
             );
           })}
+        </section>
+
+        <section className="rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">
+          <h2 className="mb-4 text-xl font-black text-slate-800">ミニ週報</h2>
+          <div className="grid gap-4 md:grid-cols-2">
+            {profiles.map((profile) => {
+              const meta = PROFILE_META[profile];
+              const progress = getProgress(profile);
+              const activeReviews = getActiveReviewItems(profile);
+              const lastCleared = progress.clearedUnits.at(-1);
+              const assignedUnit = assignedUnits[profile]
+                ? units.find((u) => u.id === assignedUnits[profile] && !progress.clearedUnits.includes(u.id))
+                : undefined;
+              return (
+                <div key={`${profile}-weekly`} className="rounded-2xl bg-slate-50 p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <p className="font-black text-slate-700">{meta.label}</p>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-slate-500">{progress.streakDays ?? 0}日れんぞく</span>
+                  </div>
+                  <p className="text-sm font-bold text-slate-600">今週の中心：{assignedUnit ? `Unit ${assignedUnit.id} ${assignedUnit.titleJa}` : lastCleared ? `Unit ${lastCleared} の復習` : 'Unit 1 からスタート'}</p>
+                  <p className="mt-2 text-sm font-bold text-slate-500">復習ポイント：{activeReviews.length > 0 ? `${activeReviews.length}問あります` : '今は少なめです'}</p>
+                  <p className="mt-2 text-sm font-bold text-slate-500">新しく言えたフレーズ：{progress.learnedPhrases.slice(-2).join(' / ') || 'これから増えます'}</p>
+                </div>
+              );
+            })}
+          </div>
         </section>
 
         <section className="rounded-[2rem] border border-white/80 bg-white/80 p-5 shadow-[0_18px_45px_rgba(15,23,42,0.08)]">

@@ -1,9 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, BookOpen, Heart, Lock, Play, RotateCcw, Sparkles, Trophy, Users } from 'lucide-react';
+import { ArrowRight, BookOpen, CalendarCheck, Heart, Lock, Play, RotateCcw, Sparkles, Trophy, Users } from 'lucide-react';
 import Layout from '../components/Layout';
 import { useProfile } from '../hooks/useProfile';
 import { getUnitTitleEn, units } from '../data/units';
-import { getActiveReviewItems, getProgress, isUnitUnlocked } from '../utils/storage';
+import { getActiveReviewItems, getDailyAssignment, getProgress, isUnitUnlocked } from '../utils/storage';
 import {
   KittyGuide,
   MelodyGuide,
@@ -32,7 +32,12 @@ export default function Home() {
   const { profile, setProfile } = useProfile();
   const progress = getProgress(profile);
   const clearedCount = progress.clearedUnits.length;
-  const nextUnit = units.find((u) => isUnitUnlocked(profile, u.id) && !progress.clearedUnits.includes(u.id)) ?? units[0];
+  const fallbackNextUnit = units.find((u) => isUnitUnlocked(profile, u.id) && !progress.clearedUnits.includes(u.id)) ?? units[0];
+  const assignedUnitId = getDailyAssignment(profile)?.unitId;
+  const assignedUnit = assignedUnitId
+    ? units.find((u) => u.id === assignedUnitId && isUnitUnlocked(profile, u.id) && !progress.clearedUnits.includes(u.id))
+    : undefined;
+  const nextUnit = assignedUnit ?? fallbackNextUnit;
   const reviewUnit =
     progress.clearedUnits.length > 0
       ? units.find((u) => u.id === progress.clearedUnits[progress.clearedUnits.length - 1]) ?? units[0]
@@ -41,6 +46,7 @@ export default function Home() {
   const streakDays = progress.streakDays ?? 0;
   const profileName = profile === 'sister9' ? 'May' : 'Yuna';
   const reviewCount = getActiveReviewItems(profile).length;
+  const firstPhrase = nextUnit.conversation[0];
 
   return (
     <Layout title="ことばランド" subtitle={`${profileName}の中国語と英語の練習`}>
@@ -85,8 +91,8 @@ export default function Home() {
           <div className="grid gap-6 md:grid-cols-[1.15fr_0.85fr] md:items-center">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50 px-3 py-1 text-xs font-black text-rose-500">
-                <Sparkles className="h-4 w-4" />
-                今日のおすすめ
+                {assignedUnit ? <CalendarCheck className="h-4 w-4" /> : <Sparkles className="h-4 w-4" />}
+                {assignedUnit ? '保護者から今日の指定' : '今日のおすすめ'}
               </div>
               <h2 className="text-3xl font-black leading-tight text-slate-800 md:text-4xl">
                 まずはユニット {nextUnit.id} から始めよう
@@ -146,28 +152,53 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-3">
-          <Link to={`/unit/${nextUnit.id}`} className="quick-card group border-rose-100 bg-rose-50">
-            <BookOpen className="h-6 w-6 text-rose-500" />
-            <div>
-              <p className="font-black text-slate-800">今日のレッスン</p>
-              <p className="text-sm font-bold text-slate-500">中国語と英語をセットで</p>
-            </div>
-            <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
-          </Link>
-          <Link to={reviewCount > 0 ? '/review' : `/unit/${reviewUnit.id}`} className="quick-card group border-sky-100 bg-sky-50">
-            <RotateCcw className="h-6 w-6 text-sky-500" />
-            <div>
-              <p className="font-black text-slate-800">おさらい</p>
-              <p className="text-sm font-bold text-slate-500">{reviewCount > 0 ? `${reviewCount}問のにがて` : '最近のユニット'}</p>
-            </div>
-            <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
-          </Link>
+        <section className="rounded-[2rem] border border-white/80 bg-white/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.08)] md:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2 className="text-xl font-black text-slate-800">5分ミッション</h2>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">3ステップ</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            <Link to={`/unit/${nextUnit.id}`} className="quick-card group border-rose-100 bg-rose-50">
+              <BookOpen className="h-6 w-6 text-rose-500" />
+              <div>
+                <p className="font-black text-slate-800">1. ことば</p>
+                <p className="text-sm font-bold text-slate-500">Unit {nextUnit.id} を見る</p>
+              </div>
+              <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link to={reviewCount > 0 ? '/review' : `/unit/${reviewUnit.id}`} className="quick-card group border-sky-100 bg-sky-50">
+              <RotateCcw className="h-6 w-6 text-sky-500" />
+              <div>
+                <p className="font-black text-slate-800">2. おさらい</p>
+                <p className="text-sm font-bold text-slate-500">{reviewCount > 0 ? `${reviewCount}問だけ` : `Unit ${reviewUnit.id}`}</p>
+              </div>
+              <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
+            </Link>
+            <Link to={`/unit/${nextUnit.id}`} className="quick-card group border-emerald-100 bg-emerald-50">
+              <CalendarCheck className="h-6 w-6 text-emerald-500" />
+              <div>
+                <p className="font-black text-slate-800">3. 言ってみる</p>
+                <p className="text-sm font-bold text-slate-500">{firstPhrase?.ja ?? '会話を1つ'}</p>
+              </div>
+              <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
           <Link to="/together" className="quick-card group border-emerald-100 bg-emerald-50">
             <Users className="h-6 w-6 text-emerald-500" />
             <div>
               <p className="font-black text-slate-800">ふたりで</p>
               <p className="text-sm font-bold text-slate-500">一緒にチャレンジ</p>
+            </div>
+            <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
+          </Link>
+          <Link to="/myroom" className="quick-card group border-amber-100 bg-amber-50">
+            <Trophy className="h-6 w-6 text-amber-500" />
+            <div>
+              <p className="font-black text-slate-800">マイルーム</p>
+              <p className="text-sm font-bold text-slate-500">カードと成長を見る</p>
             </div>
             <ArrowRight className="ml-auto h-5 w-5 text-slate-400 transition-transform group-hover:translate-x-1" />
           </Link>

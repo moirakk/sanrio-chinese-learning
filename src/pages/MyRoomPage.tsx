@@ -3,6 +3,8 @@ import { KittyGuide, MelodyGuide, CinnamorollGuide, PompompurinGuide, KuromiGuid
 import { useProfile } from '../hooks/useProfile';
 import { getProgress } from '../utils/storage';
 import { useMemo, useState, useRef, useEffect } from 'react';
+import { Printer } from 'lucide-react';
+import { units } from '../data/units';
 
 type RoomTab = 'growth' | 'words' | 'data' | 'board';
 type BoardMessage = { sender: string, sticker: string, emoji: string, label: string, message: string, timestamp: number };
@@ -32,6 +34,10 @@ const stickersOptions = [
   { id: 'kuromi', emoji: '💜', label: '負けないよ！', Guide: KuromiGuide },
   { id: 'pochacco', emoji: '⚽', label: 'ファイト！', Guide: PochaccoGuide },
 ];
+
+function escapeHtml(value: string) {
+  return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char] ?? char);
+}
 
 function readBoardMessages(): BoardMessage[] {
   try {
@@ -67,6 +73,17 @@ export default function MyRoomPage() {
   const starPct = Math.min(100, Math.round((progress.stars / starGoal) * 100));
   const heartPct = Math.min(100, Math.round((progress.hearts / heartGoal) * 100));
   const badgePct = Math.min(100, Math.round(((progress.clearedUnits.length) / badgeGoal) * 100));
+  const printableWords = useMemo(() => {
+    const words = units.flatMap((unit) => unit.kanji);
+    return progress.learnedKanji
+      .map((hanzi) => words.find((word) => word.hanzi === hanzi))
+      .filter((word): word is NonNullable<typeof word> => Boolean(word));
+  }, [progress.learnedKanji]);
+  const printablePhrases = useMemo(() => {
+    const phrases = units.flatMap((unit) => unit.conversation);
+    return phrases.filter((phrase) => progress.learnedPhrases.includes(phrase.zh) || progress.learnedPhrases.includes(phrase.en));
+  }, [progress.learnedPhrases]);
+  const printableCount = printableWords.length + printablePhrases.length;
 
   // --- Save / Load Logic ---
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -111,6 +128,61 @@ export default function MyRoomPage() {
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handlePrintCards = () => {
+    if (printableCount === 0) return;
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) {
+      setSaveFeedback('ポップアップを許可してね');
+      setTimeout(() => setSaveFeedback(null), 3000);
+      return;
+    }
+    const wordCards = printableWords.map((word) => `
+      <article class="card word">
+        <div class="tag">ことば</div>
+        <div class="zh">${escapeHtml(word.hanzi)}</div>
+        <div class="en">${escapeHtml(word.en)}</div>
+        <div class="ja">${escapeHtml(word.ja)} / ${escapeHtml(word.pinyin.replace(/[1-5]/g, ''))}</div>
+      </article>
+    `).join('');
+    const phraseCards = printablePhrases.map((phrase) => `
+      <article class="card phrase">
+        <div class="tag">フレーズ</div>
+        <div class="zh small">${escapeHtml(phrase.zh)}</div>
+        <div class="en small">${escapeHtml(phrase.en)}</div>
+        <div class="ja">${escapeHtml(phrase.ja)}</div>
+      </article>
+    `).join('');
+
+    printWindow.document.write(`<!doctype html>
+      <html lang="ja">
+        <head>
+          <meta charset="utf-8" />
+          <title>${escapeHtml(meta.label)} のことばカード</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { margin: 0; padding: 24px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans JP", sans-serif; color: #1f2937; }
+            h1 { margin: 0 0 16px; font-size: 22px; }
+            .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .card { min-height: 148px; break-inside: avoid; border: 2px solid #e5e7eb; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; justify-content: center; }
+            .tag { align-self: flex-start; border-radius: 999px; background: #f1f5f9; padding: 4px 10px; font-size: 11px; font-weight: 800; color: #64748b; }
+            .zh { margin-top: 12px; font-size: 44px; font-weight: 900; line-height: 1.05; }
+            .zh.small { font-size: 24px; }
+            .en { margin-top: 8px; font-size: 22px; font-weight: 900; color: #0369a1; }
+            .en.small { font-size: 20px; }
+            .ja { margin-top: 8px; font-size: 14px; font-weight: 800; color: #64748b; }
+            @media print { body { padding: 12mm; } .card { border-color: #111827; } }
+          </style>
+        </head>
+        <body>
+          <h1>${escapeHtml(meta.label)} のことばカード</h1>
+          <main class="grid">${wordCards}${phraseCards}</main>
+        </body>
+      </html>`);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
   };
 
   // --- Message Board Logic ---
@@ -282,7 +354,7 @@ export default function MyRoomPage() {
         <section className="rounded-3xl bg-orange-50 border-2 border-orange-200 p-6 card-shadow">
           <h3 className="text-xl font-black text-orange-600 mb-1">セーブ / ロード</h3>
           <p className="mb-4 text-sm font-bold text-orange-500">{meta.label} のデータだけを保存・読み込みします</p>
-          <div className="flex gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row">
             <button onClick={handleSave} className="flex-1 bg-white border-2 border-orange-300 rounded-2xl py-3 font-bold text-orange-500 btn-3d relative">
               💾 {meta.label} をセーブ
               {saveFeedback && <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white text-xs px-2 py-1 rounded-full whitespace-nowrap animate-bounce">{saveFeedback}</span>}
@@ -292,6 +364,25 @@ export default function MyRoomPage() {
               📂 {meta.label} にロード
             </button>
           </div>
+        </section>
+
+        <section className="rounded-3xl bg-sky-50 border-2 border-sky-200 p-6 card-shadow">
+          <div className="mb-4 flex items-center gap-3">
+            <Printer className="h-6 w-6 text-sky-600" />
+            <div>
+              <h3 className="text-xl font-black text-sky-700">ことばカード印刷</h3>
+              <p className="text-sm font-bold text-sky-600">覚えた中国語・英語を紙カードにします</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handlePrintCards}
+            disabled={printableCount === 0}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-sky-300 bg-white px-4 py-3 font-black text-sky-700 btn-3d disabled:opacity-50"
+          >
+            <Printer className="h-5 w-5" />
+            {printableCount > 0 ? `${printableCount}枚を印刷` : 'カードはまだありません'}
+          </button>
         </section>
       </div>}
 

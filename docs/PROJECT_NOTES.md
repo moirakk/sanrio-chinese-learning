@@ -18,6 +18,7 @@ The app is fully client-side:
 - React renders all screens.
 - Active lesson data lives in `src/data/units.ts`.
 - Progress, messages, and speech speed live in browser `localStorage`.
+- Parent-set daily unit assignments live in browser `localStorage` and expire after the current day.
 - Missed questions are stored in each learner's local progress as a review queue.
 - Browser speech synthesis handles Mandarin, English, and Japanese playback.
 - Hash-based routing keeps static hosting simple.
@@ -61,6 +62,8 @@ Before sharing a new version with the children:
 - Two-player challenge starts and reaches a result screen.
 - Missed questions appear on the review page and are removed after a correct review answer.
 - The parent page shows both profiles separately.
+- Parent page can set today's unit for each learner, and the home page prioritizes that unit when it is still unlocked and unfinished.
+- My Room can print learned Chinese and English practice cards after content has been collected.
 - Speech buttons play Mandarin and English on the target device.
 
 ## Known Constraints

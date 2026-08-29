@@ -12,6 +12,11 @@ type ProgressState = {
   streakDays?: number;
 };
 
+export type DailyAssignment = {
+  date: string;
+  unitId: number;
+};
+
 export type ReviewItem = {
   id: string;
   unitId: number;
@@ -86,6 +91,10 @@ function key(profile: Profile) {
   return `sanrio_progress_${profile}`;
 }
 
+function assignmentKey(profile: Profile) {
+  return `sanrio_assignment_${profile}`;
+}
+
 export function getProgress(profile: Profile): ProgressState {
   try {
     const raw = localStorage.getItem(key(profile));
@@ -97,6 +106,41 @@ export function getProgress(profile: Profile): ProgressState {
 
 function todayKey() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function asDailyAssignment(value: unknown): DailyAssignment | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const candidate = value as Partial<DailyAssignment>;
+  if (typeof candidate.date !== 'string' || typeof candidate.unitId !== 'number' || !Number.isFinite(candidate.unitId)) {
+    return undefined;
+  }
+  return { date: candidate.date, unitId: candidate.unitId };
+}
+
+export function getDailyAssignment(profile: Profile): DailyAssignment | undefined {
+  try {
+    const raw = localStorage.getItem(assignmentKey(profile));
+    const parsed = raw ? asDailyAssignment(JSON.parse(raw)) : undefined;
+    return parsed?.date === todayKey() ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function setDailyAssignment(profile: Profile, unitId: number) {
+  try {
+    localStorage.setItem(assignmentKey(profile), JSON.stringify({ date: todayKey(), unitId }));
+  } catch {
+    // The recommendation flow falls back to normal unit order when storage is blocked.
+  }
+}
+
+export function clearDailyAssignment(profile: Profile) {
+  try {
+    localStorage.removeItem(assignmentKey(profile));
+  } catch {
+    // Nothing else needs to change if storage is unavailable.
+  }
 }
 
 function previousDateKey(date: Date) {

@@ -14,7 +14,9 @@ A private, family-focused language learning web app for two children. It uses Ja
 - Mini games: memory, tone, puzzle, hunt, fill-in-the-blank, and word order
 - Two-player challenge mode
 - Parent progress page for checking both learners at once
+- Parent-set daily unit assignments
 - "My Room" progress dashboard, learned words, message board, and save/load
+- Printable Chinese and English practice cards
 - Browser-based Mandarin, English, and Japanese speech playback
 - Search indexing discouraged through page metadata for privacy
 
@@ -102,6 +104,8 @@ Important local storage keys:
 - `sanrio_profile`
 - `sanrio_progress_sister9`
 - `sanrio_progress_sister12`
+- `sanrio_assignment_sister9`
+- `sanrio_assignment_sister12`
 - `sanrio_messageboard`
 - `sanrio_speech_rate`
 

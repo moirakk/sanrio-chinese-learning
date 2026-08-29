@@ -6,6 +6,10 @@ All notable changes to this family learning app will be documented here.
 
 - Expanded lessons into Japanese-led Chinese and English practice.
 - Added a trilingual lesson content check to the local verification flow.
+- Added a daily 5-minute mission on the home page.
+- Added parent-set daily unit assignments and a mini weekly summary.
+- Added printable learned-word and phrase cards in My Room.
+- Added Japanese answer hints after missed game questions.
 - Removed unused legacy lesson data files and Vite template assets.
 - Updated the GitHub Pages artifact upload action to the current major version.
 - Added safer fallbacks for profile selection, progress data, speech speed, and the local message board.

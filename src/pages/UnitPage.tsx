@@ -98,6 +98,15 @@ function getAutoReadLang(q: Question): SpeechLang {
   return q.readLang ?? 'zh-CN';
 }
 
+function answerHint(q: Question, answerText: string): string {
+  if (q.kind === 'tone') return `声調はピンインの数字を見よう。正解は ${answerText} 声です。`;
+  if (q.kind === 'fill') return `空いているところに入ることばを、文全体の意味から選ぼう。答えは「${answerText}」。`;
+  if (q.kind === 'order') return `日本語の意味に合うように、ことばの順番をもう一度声に出してみよう。`;
+  if (q.kind === 'hunt') return `日本語・英語・ピンインの3つを手がかりに、中国語の文字を探そう。`;
+  if (q.readLang === 'en-US') return `英語の問題だよ。日本語の意味と同じ英語は「${answerText}」。`;
+  return `中国語の問題だよ。日本語の意味と同じ中国語は「${answerText}」。`;
+}
+
 function guideByKey(keyName: string) {
   if (keyName === 'kitty') return <KittyGuide className="w-20 h-20 animate-bob" />;
   if (keyName === 'melody') return <MelodyGuide className="w-20 h-20 animate-bob" />;
@@ -295,6 +304,7 @@ export default function UnitPage() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [msg, setMsg] = useState('準備OK！');
+  const [hint, setHint] = useState('');
   const [lockedClick, setLockedClick] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [pickWords, setPickWords] = useState<string[]>([]);
@@ -353,6 +363,7 @@ export default function UnitPage() {
     setIndex(0);
     setScore(0);
     setMsg('ゲームスタート！');
+    setHint('');
     setLockedClick(false);
     setSelectedId(null);
     setPickWords([]);
@@ -390,6 +401,7 @@ export default function UnitPage() {
     const nextScore = score + (ok ? 1 : 0);
     setScore(nextScore);
     setMsg(ok ? '正解！' : `おしい！ 正解: ${answerText}`);
+    setHint(!ok && current ? answerHint(current, answerText) : '');
     setTimeout(() => {
       const nextIndex = index + 1;
       setIndex(nextIndex);
@@ -397,6 +409,7 @@ export default function UnitPage() {
       setLockedClick(false);
       setPickWords([]);
       setTimeLeft(10);
+      setHint('');
       if (baseGameKind === 'memory' && !unit?.isTest) {
         setMemoryDeck(buildMemoryRound(pinyin, kanji));
         setMemoryOpen([]);
@@ -590,6 +603,11 @@ export default function UnitPage() {
           <section ref={gameRef} className="rounded-3xl bg-purple-50 border-2 border-purple-200 p-4 md:p-6 card-shadow">
             <h3 className="text-xl font-black text-purple-600 mb-4">ゲームタイム！</h3>
             <p className="text-sm font-bold text-slate-500 mb-3">{msg}</p>
+            {hint ? (
+              <p className="mb-4 rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
+                {hint}
+              </p>
+            ) : null}
 
             {!unit.isTest && baseGameKind === 'memory' ? (
               <div>
